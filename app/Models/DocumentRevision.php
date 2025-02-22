@@ -50,21 +50,39 @@ class DocumentRevision extends Model
     }
 
     public function accFormat(){
-        return $this->histories()->whereHas('performer.roles', function ($query) {
+        $history = $this->histories()->whereHas('performer.roles', function ($query) {
             $query->whereIn('name', ['Pengendali Dokumen','Administrator'])->where('action','Approved');
         })->first();
+
+        if ($history && $history->revision->acc_format) {
+            return $history;
+        }
+    
+        return null;
     }
 
     public function accContent(){
-        return $this->histories()->whereHas('performer.roles', function ($query) {
+        $history = $this->histories()->whereHas('performer.roles', function ($query) {
             $query->whereIn('name', ['Bagian Mutu','Administrator'])->where('action','Approved');
         })->first();
+
+        if ($history && $history->revision->acc_content) {
+            return $history;
+        }
+    
+        return null;
     }
 
     public function accKepalaPuskesmas(){
-        return $this->histories()->whereHas('performer.roles', function ($query) {
-            $query->where('name', 'Kepala Puskesmas')->where('action','Approved');
+        $history = $this->histories()->whereHas('performer.roles', function ($query) {
+            $query->whereIn('name', ['Kepala Puskesmas','Administrator'])->where('action','Approved');
         })->first();
+
+        if ($history && $history->revision->acc_format && $history->revision->acc_content && ($history->document->is_active || $history->revision->latestRevision($history->document_id)->status === 'Expired')) {
+            return $history;
+        }
+    
+        return null;
     }
 
     public function reviser()

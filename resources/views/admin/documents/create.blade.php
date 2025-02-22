@@ -67,6 +67,18 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX (MAX. 5MB)</p>
           </div>
 
+          @if (auth()->user()->isRole('Administrator'))
+          <div class="mb-6">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Opsi Tambahan</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="1" name="noApproval" id="ckTanpaApproval" @if(old('noApproval')) checked @endif>
+              <label class="form-check-label" for="ckTanpaApproval">
+                Tanpa Approval
+              </label>
+            </div>
+          </div>
+          @endif
+
           <div class="flex justify-center">
             <a href="{{route('document_revision.index')}}" class="btn btn-danger m-1">
               Batal
