@@ -178,11 +178,7 @@ class DocumentController extends Controller
 
         $validated = $request->validate($rules);
 
-        $file = $request->file('file_path');
-        $fileExtension = $file->getClientOriginalExtension();
-        $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
-        Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
-
+        
         $docData = [
             'title' => $validated['title'],
             'code' => $validated['code'],
@@ -190,17 +186,23 @@ class DocumentController extends Controller
             'uploaded_by' => Auth::id(),
             'current_revision_id' => null,
         ];
-
+        
+        $file = $request->file('file_path');
+        $fileExtension = $file->getClientOriginalExtension();
+        
         if(!empty($validated['noApproval'])){
             $docData['is_active'] = $validated['noApproval'];
-        }
+            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+        }else{
+            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
 
+        }
+        
+        Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
         $document = Document::create($docData);
 
         $revDocData = [
             'document_id' => $document->id,
-            'acc_format' => 1,
-            'acc_content' => 1,
             'file_path' => $fileName,
             'revised_by' => Auth::id(),
             'revision_number' => 1,
@@ -209,6 +211,8 @@ class DocumentController extends Controller
 
         if(!empty($validated['noApproval'])){
             $revDocData['status'] = $validated['noApproval'] == true ? 'Disetujui' : 'Draft';
+            $revDocData['acc_format'] = $validated['noApproval'] == true ? 1 : 0;
+            $revDocData['acc_content'] = $validated['noApproval'] == true ? 1 : 0;
         }
 
         $revision = DocumentRevision::create($revDocData);
@@ -237,13 +241,15 @@ class DocumentController extends Controller
             ]);
             event(new NewCreatedDocument($document, 'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
         }else{
-            DocumentHistory::create([
-                'document_id' => $document->id,
-                'revision_id' => $revision->id,
-                'action' => 'Approved',
-                'performed_by' => Auth::id(),
-                'reason' => null,
-            ]);
+            if($validated['noApproval']){
+                DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => null,
+                ]);
+            }
         }
 
         // return redirect()->route('documents.index')->with('success', 'Document created successfully.');
