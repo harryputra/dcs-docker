@@ -106,17 +106,17 @@
                                     <li class="@if ($document->currentRevision->acc_format) active @endif">
                                         <span class="icon"><i class="bi bi-clipboard-pulse"></i></i></span>
                                         <span class="fw-semibold">Pengecekan Format</span>
-                                        <small>{{empty($document->currentRevision->accFormat()) ? '-' : $document->currentRevision->created_at->format('d-m-Y')}}</small>
+                                        <small>{{empty($document->currentRevision->accFormat()) ? '-' : $document->currentRevision->latestRevision()->accFormat()->created_at->format('d-m-Y')}}</small>
                                     </li>
                                     <li class="@if ($document->currentRevision->acc_format && $document->currentRevision->acc_content) active @endif">
                                         <span class="icon"><i class="bi bi-file-earmark-break"></i></span>
                                         <span class="fw-semibold">Pengecekan Konten</span>
-                                        <small>{{empty($document->currentRevision->accContent()) ? '-' : $document->currentRevision->created_at->format('d-m-Y')}}</small>
+                                        <small>{{empty($document->currentRevision->accContent()) ? '-' : $document->currentRevision->latestRevision()->accContent()->created_at->format('d-m-Y')}}</small>
                                     </li>
                                     <li class="@if ($document->is_active || $document->currentRevision->latestRevision($document->id)->status === 'Expired') active @endif">
                                         <span class="icon"><i class="bi bi-file-earmark-check"></i></span>
                                         <span class="fw-semibold">Dokumen Disetujui</span>
-                                        <small>{{empty($document->currentRevision->accKepalaPuskesmas()) ? '-' : $document->currentRevision->created_at->format('d-m-Y')}}</small>
+                                        <small>{{empty($document->currentRevision->accKepalaPuskesmas()) ? '-' : $document->currentRevision->latestRevision()->accKepalaPuskesmas()->created_at->format('d-m-Y')}}</small>
                                     </li>
                                 </ul>
                             </div>

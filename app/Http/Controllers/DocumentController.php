@@ -164,34 +164,58 @@ class DocumentController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'title' => 'required|string|max:255',
             'code' => 'required|string|unique:documents,code|max:30',
             'category_id' => 'required|exists:categories,id',
             'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
             'description' => 'required|string',
-        ]);
+        ];
 
-        $file = $request->file('file_path');
-        $fileExtension = $file->getClientOriginalExtension();
-        $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
-        Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
+        if(auth()->user()->isRole('Administrator')){
+            $rules['noApproval'] = 'boolean';
+        }
 
-        $document = Document::create([
+        $validated = $request->validate($rules);
+
+        
+        $docData = [
             'title' => $validated['title'],
             'code' => $validated['code'],
             'category_id' => $validated['category_id'],
             'uploaded_by' => Auth::id(),
             'current_revision_id' => null,
-        ]);
+        ];
+        
+        $file = $request->file('file_path');
+        $fileExtension = $file->getClientOriginalExtension();
+        
+        if(!empty($validated['noApproval'])){
+            $docData['is_active'] = $validated['noApproval'];
+            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+        }else{
+            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
 
-        $revision = DocumentRevision::create([
+        }
+        
+        Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
+        $document = Document::create($docData);
+
+        $revDocData = [
             'document_id' => $document->id,
             'file_path' => $fileName,
             'revised_by' => Auth::id(),
             'revision_number' => 1,
             'description' => $validated['description'],
-        ]);
+        ];
+
+        if(!empty($validated['noApproval'])){
+            $revDocData['status'] = $validated['noApproval'] == true ? 'Disetujui' : 'Draft';
+            $revDocData['acc_format'] = $validated['noApproval'] == true ? 1 : 0;
+            $revDocData['acc_content'] = $validated['noApproval'] == true ? 1 : 0;
+        }
+
+        $revision = DocumentRevision::create($revDocData);
 
         foreach ($validated['rev'] ?? [] as $rev) {
             $currentRevision = DocumentRevision::findOrFail($rev);
@@ -207,15 +231,26 @@ class DocumentController extends Controller
 
         $document->update(['current_revision_id' => $revision->id]);
 
-        DocumentHistory::create([
-            'document_id' => $document->id,
-            'revision_id' => $revision->id,
-            'action' => 'Created',
-            'performed_by' => Auth::id(),
-            'reason' => null,
-        ]);
-
-        event(new NewCreatedDocument($document, 'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
+        if(empty($validated['noApproval'])){
+            DocumentHistory::create([
+                'document_id' => $document->id,
+                'revision_id' => $revision->id,
+                'action' => 'Created',
+                'performed_by' => Auth::id(),
+                'reason' => null,
+            ]);
+            event(new NewCreatedDocument($document, 'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
+        }else{
+            if($validated['noApproval']){
+                DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => null,
+                ]);
+            }
+        }
 
         // return redirect()->route('documents.index')->with('success', 'Document created successfully.');
         return redirect()->route('document_revision.index')->with('success', 'Document Created successfully.');
