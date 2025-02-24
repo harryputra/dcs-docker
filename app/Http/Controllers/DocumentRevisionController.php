@@ -271,13 +271,17 @@ class DocumentRevisionController extends Controller
         
         $validated = $validator->validate();
         
-        $data = [
+        $revData = [
             'status' => $validated['status'],
             'acc_format' => $validated['status'] == 'Pengajuan Revisi' ? false : (auth()->user()->isRole('Pengendali-Dokumen') ? true : $validated['acc_format'] ?? $documentRevision->acc_format),
             'acc_content' => $validated['status'] == 'Pengajuan Revisi' ? false : (auth()->user()->isRole('Bagian-Mutu') ? true : $validated['acc_content'] ?? $documentRevision->acc_content),
         ];
 
-        $documentRevision->update($data);
+        $documentRevision->update($revData);
+
+        if($validated['status'] == 'Pengajuan Revisi'){
+            $documentRevision->document->update(['is_active' => false]);
+        }
 
         $act = match($validated['status']) {
             'Disetujui' => 'Approved',
