@@ -149,11 +149,11 @@ class DocumentController extends Controller
 
     public function indexActive()
     {
+        $userRoles = Auth::user()->roles->pluck('slug')->toArray();
         $documents = Document::whereHas('latestRevision', function ($query) {
             $query->whereNotIn('status', ['Draft', 'Pengajuan Revisi']);
         })->with(['category', 'uploader', 'latestRevision'])->get();
-
-        return view('admin.active_document.index', compact('documents'));
+        return view('admin.active_document.index', compact('documents','userRoles'));
     }
 
     public function create()
