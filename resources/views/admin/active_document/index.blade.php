@@ -134,7 +134,7 @@
                                                                 <div class="mb-3">
                                                                     <label for="exampleInputEmail1"
                                                                         class="form-label">Alasan
-                                                                        Penolakan<span class="text-danger">*</span></label>
+                                                                        Pengajuan Revisi<span class="text-danger">*</span></label>
                                                                     <textarea class="form-control" name="reason" rows="2" required></textarea>
                                                                 </div>
                                                         </div>
