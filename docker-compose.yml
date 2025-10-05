@@ -1,0 +1,48 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: dcs-app
+        container_name: dcs_app
+        restart: unless-stopped
+        volumes:
+            - .:/var/www
+        networks:
+            - dcs_net
+
+    webserver:
+        image: nginx:alpine
+        container_name: dcs_nginx
+        restart: unless-stopped
+        ports:
+            - "8081:80"
+        volumes:
+            - .:/var/www
+            - ./nginx/conf.d:/etc/nginx/conf.d
+        depends_on:
+            - app
+        networks:
+            - dcs_net
+
+    db:
+        image: mysql:8.0
+        container_name: dcs_mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: db_dcs
+            MYSQL_USER: dcs_user
+            MYSQL_PASSWORD: dcs_pass
+        ports:
+            - "3306:3306"
+        volumes:
+            - dbdata:/var/lib/mysql
+        networks:
+            - dcs_net
+
+volumes:
+    dbdata:
+
+networks:
+    dcs_net:
