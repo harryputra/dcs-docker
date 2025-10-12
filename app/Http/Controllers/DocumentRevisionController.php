@@ -75,15 +75,16 @@ class DocumentRevisionController extends Controller
     }
 
     public function store(Request $request){
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'category_id' => 'required',
-            'rev' => 'required|array',
-            'code' => 'required|string|unique:documents,code|max:30',
-            'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
-            'description' => 'required|string',
-            'reason' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'category_id' => 'required',
+                'rev' => 'required|array',
+                'code' => 'required|string|unique:documents,code|max:30',
+                'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
+                'description' => 'required|string',
+                'reason' => 'required|string|max:255',
+            ]);
 
         $file = $request->file('file_path');
         $fileExtension = $file->getClientOriginalExtension();
@@ -126,7 +127,10 @@ class DocumentRevisionController extends Controller
 
         event(new NewCreatedDocument($document,'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
 
-        return redirect()->route('document_revision.index')->with('success', 'Document Updated successfully.');
+            return redirect()->route('document_revision.index')->with('success', 'Dokumen revisi berhasil dibuat dan menunggu persetujuan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membuat dokumen revisi. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function show(DocumentRevision $documentRevision){
@@ -169,20 +173,21 @@ class DocumentRevisionController extends Controller
 
     public function update(Request $request, DocumentRevision $documentRevision)
     {
-        $rules = [
-            'title' => 'required|string|max:255',
-            'category_id' => 'required',
-            'rev' => 'nullable|array',
-            'code' => 'required|string|unique:documents,code,'.$documentRevision->document->id.'|max:30',
-            'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
-            'description' => 'required|string',
-        ];
+        try {
+            $rules = [
+                'title' => 'required|string|max:255',
+                'category_id' => 'required',
+                'rev' => 'nullable|array',
+                'code' => 'required|string|unique:documents,code,'.$documentRevision->document->id.'|max:30',
+                'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
+                'description' => 'required|string',
+            ];
 
-        if($documentRevision->status !== 'Pengajuan Revisi'){
-            $rules['reason'] = 'required|string|max:255';
-        }
+            if($documentRevision->status !== 'Pengajuan Revisi'){
+                $rules['reason'] = 'required|string|max:255';
+            }
 
-        $validated = $request->validate($rules);
+            $validated = $request->validate($rules);
 
         $file = $request->file('file_path');
         $fileExtension = $file->getClientOriginalExtension();
@@ -242,34 +247,38 @@ class DocumentRevisionController extends Controller
 
         event(new NewCreatedDocument($documentRevision->document,'Dokumen ' . $documentRevision->document->title . ' telah direvisi oleh ' . $documentRevision->document->uploader->name . '.'));
 
-        return redirect()->route('document_revision.index')->with('success', 'Revision updated successfully.');
+            return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil diperbarui dan menunggu persetujuan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui dokumen. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function updateApproval(Request $request, DocumentRevision $documentRevision)
     {
-        $rules = [
-            'status' => 'required|in:Disetujui,Pengajuan Revisi,Draft',
-            'reason' => 'required_if:status,Pengajuan Revisi|string|max:255',
-            'file' => 'required_if:status,Disetujui|file|mimes:pdf,doc,docx,ppt,pptx',
-        ];
+        try {
+            $rules = [
+                'status' => 'required|in:Disetujui,Pengajuan Revisi,Draft',
+                'reason' => 'required_if:status,Pengajuan Revisi|string|max:255',
+                'file' => 'required_if:status,Disetujui|file|mimes:pdf,doc,docx,ppt,pptx',
+            ];
 
-        if (auth()->user()->isRole('Administrator')) {
-            $rules['acc_format'] = 'boolean';
-            $rules['acc_content'] = 'boolean';
-        }
-        
-        $validator = Validator::make($request->all(), $rules);
-        
-        $validator->after(function ($validator) use ($request) {
             if (auth()->user()->isRole('Administrator')) {
-                if ($request->input('acc_format') == false && $request->input('acc_content') == false && $request->input('reason') === '') {
-                    $validator->errors()->add('acc_format', 'Either acc_format or acc_content must be true.');
-                    $validator->errors()->add('acc_content', 'Either acc_format or acc_content must be true.');
-                }
+                $rules['acc_format'] = 'boolean';
+                $rules['acc_content'] = 'boolean';
             }
-        });
-        
-        $validated = $validator->validate();
+            
+            $validator = Validator::make($request->all(), $rules);
+            
+            $validator->after(function ($validator) use ($request) {
+                if (auth()->user()->isRole('Administrator')) {
+                    if ($request->input('acc_format') == false && $request->input('acc_content') == false && $request->input('reason') === '') {
+                        $validator->errors()->add('acc_format', 'Either acc_format or acc_content must be true.');
+                        $validator->errors()->add('acc_content', 'Either acc_format or acc_content must be true.');
+                    }
+                }
+            });
+            
+            $validated = $validator->validate();
         
         $revData = [
             'status' => $validated['status'],
@@ -367,6 +376,9 @@ class DocumentRevisionController extends Controller
         }
         
 
-        return redirect()->route('document_approval.index')->with('success', 'Document updated successfully.');
+        return redirect()->route('document_approval.index')->with('success', 'Status dokumen berhasil diperbarui.');
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Gagal memperbarui status dokumen. Silakan coba lagi. Error: ' . $e->getMessage());
+    }
     }
 }

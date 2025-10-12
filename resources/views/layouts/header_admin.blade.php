@@ -38,6 +38,11 @@
     font-size: 0.75rem;
     color: gray;
   }
+
+  .my-custom-popup {
+        border-radius: 25px !important;
+        font-family: 'Arial', sans-serif !important;
+    }
 </style>
 
 <body>

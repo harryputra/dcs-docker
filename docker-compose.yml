@@ -5,7 +5,7 @@ services:
             dockerfile: Dockerfile
         image: dcs-app
         container_name: dcs_app
-        restart: unless-stopped
+        restart: always
         volumes:
             - .:/var/www
         networks:
@@ -14,7 +14,7 @@ services:
     webserver:
         image: nginx:alpine
         container_name: dcs_nginx
-        restart: unless-stopped
+        restart: always
         ports:
             - "8081:80"
         volumes:
@@ -28,7 +28,7 @@ services:
     db:
         image: mysql:8.0
         container_name: dcs_mysql
-        restart: unless-stopped
+        restart: always
         environment:
             MYSQL_ROOT_PASSWORD: root
             MYSQL_DATABASE: db_dcs

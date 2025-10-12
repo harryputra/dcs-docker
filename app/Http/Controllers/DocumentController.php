@@ -164,19 +164,20 @@ class DocumentController extends Controller
 
     public function store(Request $request)
     {
-        $rules = [
-            'title' => 'required|string|max:255',
-            'code' => 'required|string|unique:documents,code|max:30',
-            'category_id' => 'required|exists:categories,id',
-            'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
-            'description' => 'required|string',
-        ];
+        try {
+            $rules = [
+                'title' => 'required|string|max:255',  
+                'code' => 'required|string|unique:documents,code|max:30',
+                'category_id' => 'required|exists:categories,id',
+                'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
+                'description' => 'required|string',
+            ];
 
-        if(auth()->user()->isRole('Administrator')){
-            $rules['noApproval'] = 'boolean';
-        }
+            if(auth()->user()->isRole('Administrator')){
+                $rules['noApproval'] = 'boolean';
+            }
 
-        $validated = $request->validate($rules);
+            $validated = $request->validate($rules);
 
         
         $docData = [
@@ -252,8 +253,11 @@ class DocumentController extends Controller
             }
         }
 
-        // return redirect()->route('documents.index')->with('success', 'Document created successfully.');
-        return redirect()->route('document_revision.index')->with('success', 'Document Created successfully.');
+            // return redirect()->route('documents.index')->with('success', 'Document created successfully.');
+            return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil dibuat dan menunggu persetujuan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membuat dokumen. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function show(Document $document)

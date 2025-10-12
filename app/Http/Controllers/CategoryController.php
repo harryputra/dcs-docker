@@ -29,13 +29,17 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
 
-        Category::create($validated);
+            Category::create($validated);
 
-        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
+            return redirect()->route('categories.index')->with('success', 'Kategori berhasil dibuat.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membuat kategori. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
@@ -51,13 +55,17 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
 
-        $category->update($validated);
+            $category->update($validated);
 
-        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
+            return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui kategori. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
@@ -65,7 +73,13 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        $category->delete();
+        try {
+            $category->delete();
+
+            return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus kategori. Silakan coba lagi. Error: ' . $e->getMessage());
+        }
 
         return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }

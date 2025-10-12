@@ -13,7 +13,7 @@
                     <div class="col-md-8">
                         <div class="card">
                             <div class="card-body">
-                                <label id="labelToChange" class="form-label">Kategori Dokumen</label>
+                                <label id="labelToChange" class="form-label">Dokumen Anda</label>
 
                                 <h5 class="card-title fw-semibold mb-4">Perbarui Dokumen </h5>
                                 @if ($errors->any())
@@ -30,13 +30,13 @@
                                         <label for="exampleInputEmail1" class="form-label">Judul<span
                                                 class="text-danger">*</span></label>
                                         <input type="text" name="title" value="{{ old('title') ?? '' }}"
-                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="exampleInputEmail1" class="form-label">Kategori Dokumen<span
                                                     class="text-danger">*</span></label>
-                                            <select class="form-control" id="kategori_select" name="category_id">
+                                            <select class="form-control" id="kategori_select" name="category_id" required>
                                                 <option value="">-- Pilih --</option>
                                                 @foreach ($categories as $category)
                                                     <option value="{{ $category->id }}"
@@ -52,27 +52,27 @@
                                         <label for="exampleInputEmail1" class="form-label">ID Dokumen<span
                                                 class="text-danger">*</span></label>
                                         <input type="text" name="code" value="{{ old('code') ?? '' }}"
-                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="dokumen" class="form-label">Berkas Dokumen<span
                                                 class="text-danger">*</span></label>
                                         <input type="file" name="file_path" class="form-control" id="dokumen"
-                                            aria-describedby="dokumenHelp" accept=".pdf,.doc,.docx,.txt">
+                                            aria-describedby="dokumenHelp" accept=".pdf,.doc,.docx,.txt" required>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="exampleInputEmail1" class="form-label">Deskripsi<span
                                             class="text-danger">*</span></label>
-                                    <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="2">{{ old('description') ?? '' }}</textarea>
+                                    <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="2" required>{{ old('description') ?? '' }}</textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label for="exampleInputEmail1" class="form-label">Alasan<span
                                             class="text-danger">*</span></label>
-                                    <textarea class="form-control" name="reason" id="exampleFormControlTextarea1" rows="2">{{ old('reason') ?? '' }}</textarea>
+                                    <textarea class="form-control" name="reason" id="exampleFormControlTextarea1" rows="2" required>{{ old('reason') ?? '' }}</textarea>
                                 </div>
                                 <div class="d-flex justify-content-center gap-2" style="width: 400px; margin: auto;">
-                                    <button type="button" class="btn btn-danger" onclick="history.back()">Kembali</button>
+                                    <a href="{{ route('document_revision.index') }}" class="btn btn-danger">Kembali</a>
                                     <button type="submit" class="btn btn-admin">Submit</button>
                                 </div>
                             </div>

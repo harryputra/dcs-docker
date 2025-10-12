@@ -27,7 +27,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-danger" onclick="history.back()">Kembali</button>
+                    <a href="{{ route('categories.index') }}" class="btn btn-danger">Kembali</a>
                     <button type="submit" class="btn btn-admin">Submit</button>
                 </div>
             </form>

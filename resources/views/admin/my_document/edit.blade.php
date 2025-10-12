@@ -78,7 +78,7 @@
                                 </div>
 
                                 <div class="d-flex justify-content-center gap-2" style="width: 400px; margin: auto;">
-                                    <button type="button" class="btn btn-danger" onclick="history.back()">Kembali</button>
+                                    <a href="{{ route('document_revision.index') }}" class="btn btn-danger">Kembali</a>
                                     <button type="submit" class="btn btn-admin">Submit</button>
                                 </div>
                             </div>
