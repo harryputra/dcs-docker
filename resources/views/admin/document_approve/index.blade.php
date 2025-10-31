@@ -76,29 +76,42 @@
                                                         <button type="button" id="btn-modalTerima"
                                                             class="btn btn-secondary btn-sm" data-bs-toggle="modal"
                                                             data-bs-target="#modalTerima"
-                                                            data-id="{{ $latestDocRevision->id }}">
+                                                            data-id="{{ $latestDocRevision->id }}"
+                                                            data-file-url="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
+                                                            data-title="{{ $document->title }}"
+                                                            data-code="{{ $document->code }}">
                                                             Detail
                                                         </button>
                                                     </td>
                                                 @else
                                                     <td>
-                                                        @if (auth()->user()->isRole('kepala-puskesmas') && $latestDocRevision->acc_format && $latestDocRevision->acc_content)
+                                                            @if (auth()->user()->isRole('kepala-puskesmas') && $latestDocRevision->acc_format && $latestDocRevision->acc_content)
                                                             <span style="display: none">z</span>
                                                             <a href="{{ route('document_approval.edit', ['documentRevision' => $latestDocRevision->id]) }}"
-                                                                class="btn btn-admin btn-sm">
+                                                                class="btn btn-admin btn-sm"
+                                                                data-id="{{ $latestDocRevision->id }}"
+                                                                data-file-url="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
+                                                                data-title="{{ $document->title }}"
+                                                                data-code="{{ $document->code }}">
                                                                 Terima
                                                             </a>
                                                         @else
                                                             <button type="button" id="btn-modalTerima"
                                                                 class="btn btn-admin btn-sm" data-bs-toggle="modal"
                                                                 data-bs-target="#modalTerima"
-                                                                data-id="{{ $latestDocRevision->id }}">
+                                                                data-id="{{ $latestDocRevision->id }}"
+                                                                data-file-url="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
+                                                                data-title="{{ $document->title }}"
+                                                                data-code="{{ $document->code }}">
                                                                 Terima
                                                             </button>
                                                         @endif
                                                         <button type="button" id="btn-modalTolak"
                                                             class="btn btn-approver btn-sm" data-bs-toggle="modal"
-                                                            data-bs-target="#modalTolak" data-id="{{ $latestDocRevision->id }}">
+                                                            data-bs-target="#modalTolak" data-id="{{ $latestDocRevision->id }}"
+                                                            data-file-url="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
+                                                            data-title="{{ $document->title }}"
+                                                            data-code="{{ $document->code }}">
                                                             Revisi
                                                         </button>
                                                     </td>
@@ -158,8 +171,7 @@
                                                         <div class="col-md-6 d-flex flex-column">
                                                             <label for="exampleInputEmail1" class="form-label">Berkas
                                                                 Dokumen</label>
-                                                            <a href="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
-                                                                id="rev_url_doc" target="_blank">Download</a>
+                                                            <a href="#" id="rev_url_doc" target="_blank">Download</a>
                                                         </div>
                                                     </div>
 
@@ -233,8 +245,7 @@
                                                     <div class="col-md-6 d-flex flex-column">
                                                         <label for="exampleInputEmail1" class="form-label">Berkas
                                                             Dokumen</label>
-                                                        <a href="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
-                                                            target="_blank">Download</a>
+                                                        <a href="#" id="acc_url_doc" target="_blank">Download</a>
                                                     </div>
                                                 </div>
                                                 <div id="reason_container" class="mb-3 row align-items-center"
@@ -291,5 +302,45 @@
 
 @section('customJS')
     <script src="{{ asset('assets/js/datatablesApproval.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Populate "Tolak" modal when opened
+            var modalTolak = document.getElementById('modalTolak');
+            if (modalTolak) {
+                modalTolak.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget; // Button that triggered the modal
+                    if (!button) return;
+                    var fileUrl = button.getAttribute('data-file-url') || '#';
+                    var title = button.getAttribute('data-title') || '';
+                    var code = button.getAttribute('data-code') || '';
+                    // set link and inputs
+                    var revUrl = document.getElementById('rev_url_doc');
+                    if (revUrl) revUrl.setAttribute('href', fileUrl);
+                    var revJudul = document.getElementById('rev_judul_doc');
+                    if (revJudul) revJudul.value = title;
+                    var revCode = document.getElementById('rev_code_doc');
+                    if (revCode) revCode.value = code;
+                });
+            }
+
+            // Populate "Terima" modal when opened
+            var modalTerima = document.getElementById('modalTerima');
+            if (modalTerima) {
+                modalTerima.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    if (!button) return;
+                    var fileUrl = button.getAttribute('data-file-url') || '#';
+                    var title = button.getAttribute('data-title') || '';
+                    var code = button.getAttribute('data-code') || '';
+                    var accUrl = document.getElementById('acc_url_doc');
+                    if (accUrl) accUrl.setAttribute('href', fileUrl);
+                    var accJudul = document.getElementById('acc_judul_doc');
+                    if (accJudul) accJudul.value = title;
+                    var accCode = document.getElementById('acc_code_doc');
+                    if (accCode) accCode.value = code;
+                });
+            }
+        });
+    </script>
 @endsection
 @endsection
