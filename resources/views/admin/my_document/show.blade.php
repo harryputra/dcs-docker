@@ -88,6 +88,26 @@
             $documentRevision->status === 'Pengajuan Revisi';
     @endphp
     <div class="container-fluid">
+        <!-- Flash Messages -->
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa fa-check-circle me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if (session('info'))
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fa fa-info-circle me-2"></i>{{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa fa-exclamation-circle me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="row">
             <!-- Card Utama -->
             <div class="col-md-8">
@@ -127,18 +147,18 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <h5 class="mb-4 card-title fw-semibold">
+                                <h3 class="mb-4 card-title fw-semibold">
                                     Detail Dokumen
-                                </h5>
+                                </h3>
                                 @if (!$is_active)
                                     @if ($documentRevision->status === 'Proses Revisi')
-                                        <div class="p-2 rounded bg-warning-subtle">
-                                            <p class="me-2">Dokumen ini sedang dalam proses revisi.</p>
+                                        <div class="p-4 rounded bg-warning-subtle">
+                                            <h5 class="fs-3">Dokumen ini sedang dalam proses revisi.</h5>
                                         </div>
                                     @else
                                         <div class="p-2 rounded bg-danger-subtle d-flex">
-                                            <p class="me-2">Dokumen ini sudah tidak berlaku dan diganti dengan dokumen
-                                                lain.</p>
+                                            <h5 class="fs-4">Dokumen ini sudah tidak berlaku dan diganti dengan dokumen
+                                                lain.</h5>
                                             <a
                                                 href="{{ route('document_revision.show', ['documentRevision' => $documentRevision->document->currentRevision->id]) }}">
                                                 <u>Lihat dokumen terbaru</u>
@@ -263,10 +283,10 @@
                 </div>
             </div>
 
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-body">
-                        @can('view-histories')
+            @can('view-histories')
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
                             <h5 class="mb-4 card-title fw-semibold">
                                 <i class="fa fa-history me-2"></i> Riwayat Revisi
                             </h5>
@@ -307,10 +327,10 @@
                                     </tbody>
                                 </table>
                             </div>
-                        @endcan
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endcan
         </div>
     </div>
 @endsection

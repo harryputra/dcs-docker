@@ -77,21 +77,15 @@
                                         {{ $documentRevision->status === 'Pengajuan Revisi' ? 'disabled' : '' }}>{{ old('reason', $reason) }}</textarea>
                                 </div>
 
-                                <<<<<<< HEAD <div class="gap-2 d-flex justify-content-center"
-                                    style="width: 400px; margin: auto;">
-                                    <a href="{{ route('document_revision.index') }}" class="btn btn-danger">Kembali</a>
-                                    =======
+                                <div class="gap-2 d-flex justify-content-center" style="width: 400px; margin: auto;">
                                     <div class="gap-2 d-flex justify-content-center" style="width: 400px; margin: auto;">
-                                        <button type="button" class="btn btn-danger"
-                                            onclick="history.back()">Kembali</button>
-                                        >>>>>>> c954a29 (fix bug History Revision and make filter for document list in
-                                        dashboard and document resources)
+                                        <a href="{{ route('document_revision.index') }}" class="btn btn-danger">Kembali</a>
                                         <button type="submit" class="btn btn-admin">Submit</button>
                                     </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
                     <!-- Card Status Kecil Kanan -->
                     <div class="col-md-4">
                         <div class="card">
@@ -114,7 +108,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
             </form>
             <input type="hidden" id="oldSelections"

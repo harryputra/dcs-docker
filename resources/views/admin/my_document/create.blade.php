@@ -15,7 +15,7 @@
                             <div class="card-body">
                                 <label id="labelToChange" class="form-label">Dokumen Anda</label>
 
-                                <h5 class="card-title fw-semibold mb-4">Perbarui Dokumen </h5>
+                                <h5 class="mb-4 card-title fw-semibold">Perbarui Dokumen </h5>
                                 @if ($errors->any())
                                     <div class="alert alert-danger">
                                         <ul>
@@ -25,12 +25,13 @@
                                         </ul>
                                     </div>
                                 @endif
-                                <div class="row mb-3 align-items-center">
+                                <div class="mb-3 row align-items-center">
                                     <div class="col-md-6">
                                         <label for="exampleInputEmail1" class="form-label">Judul<span
                                                 class="text-danger">*</span></label>
                                         <input type="text" name="title" value="{{ old('title') ?? '' }}"
-                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required>
+                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+                                            required>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -47,12 +48,13 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row mb-3 align-items-center">
+                                <div class="mb-3 row align-items-center">
                                     <div class="col-md-6">
                                         <label for="exampleInputEmail1" class="form-label">ID Dokumen<span
                                                 class="text-danger">*</span></label>
                                         <input type="text" name="code" value="{{ old('code') ?? '' }}"
-                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required>
+                                            class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+                                            required>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="dokumen" class="form-label">Berkas Dokumen<span
@@ -71,7 +73,7 @@
                                             class="text-danger">*</span></label>
                                     <textarea class="form-control" name="reason" id="exampleFormControlTextarea1" rows="2" required>{{ old('reason') ?? '' }}</textarea>
                                 </div>
-                                <div class="d-flex justify-content-center gap-2" style="width: 400px; margin: auto;">
+                                <div class="gap-2 d-flex justify-content-center" style="width: 400px; margin: auto;">
                                     <a href="{{ route('document_revision.index') }}" class="btn btn-danger">Kembali</a>
                                     <button type="submit" class="btn btn-admin">Submit</button>
                                 </div>
@@ -83,12 +85,11 @@
                     <div class="col-md-4">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title fw-semibold mb-4">Status Dokumen</h5>
+                                <h5 class="mb-4 card-title fw-semibold">Status Dokumen</h5>
                                 <div class="col-md-12">
                                     <div class="container">
                                         <div class="d-flex flex-column">
-                                            <div class=" p-2  fw-bolder"
-                                                style=" background-color: #343a4012;padding: 15px;">
+                                            <div class="p-2 fw-bolder" style=" background-color: #343a4012;padding: 15px;">
                                                 Mengubah:
                                             </div>
                                             <div class="p-2">

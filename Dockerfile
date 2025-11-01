@@ -1,6 +1,7 @@
-FROM php:8.3-fpm AS base
+# Gunakan PHP 8.3 FPM
+FROM php:8.3-fpm
 
-# Install dependencies
+# Install dependencies untuk Laravel dan Node.js
 RUN apt-get update && apt-get install -y \
     git curl zip unzip nodejs npm \
     libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev \
@@ -10,22 +11,20 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /var/www
 
-FROM base AS dev
-
+# Copy semua file
 COPY . .
 
-# Install Composer dependencies (include dev deps)
-RUN composer install
+# Install dependency Laravel (backend)
+RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
+# Set permission
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Environment variable to disable opcache optimization
-ENV OPCACHE_VALIDATE_TIMESTAMPS=1 \
-    OPCACHE_REVALIDATE_FREQ=0 \
-    CHOKIDAR_USEPOLLING=true
+# Expose PHP dan Vite port
+EXPOSE 9000
+EXPOSE 5173
 
 CMD ["php-fpm"]
-EXPOSE 9000

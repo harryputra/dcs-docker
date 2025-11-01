@@ -33,7 +33,8 @@ class DocumentController extends Controller
 
     public function showFile($filename)
     {
-        if (str_ends_with($filename, '(Signed).pdf')) {
+        // Cek apakah file adalah dokumen yang sudah disetujui (Signed)
+        if (str_contains($filename, '_(Signed)')) {
             if (Storage::disk('dokumen-approved')->exists($filename)) {
                 $filePath = Storage::disk('dokumen-approved')->path($filename);
             } elseif (Storage::disk('dokumen-revision')->exists($filename)) {

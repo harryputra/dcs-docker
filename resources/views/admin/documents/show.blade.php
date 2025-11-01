@@ -132,6 +132,26 @@
                     @endif
                 @endcan
 
+                <!-- Flash Messages -->
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fa fa-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+                @if (session('info'))
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fa fa-info-circle me-2"></i>{{ session('info') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa fa-exclamation-circle me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
                 <!-- Card Pertama -->
                 <div class="card">
                     <div class="card-body">
@@ -143,7 +163,7 @@
 
                                 @if (!$is_active)
                                     @if ($document->currentRevision->latestRevision($document->id)->status === 'Proses Revisi')
-                                        <div class="p-2 rounded bg-warning-subtle">
+                                        <div class="p-4 rounded bg-warning-subtle">
                                             <p class="me-2">Dokumen ini sedang dalam proses revisi.</p>
                                         </div>
                                     @else
@@ -298,16 +318,17 @@
                 </div>
             </div>
             @can('view-histories')
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-body">
-                            @php
-                                $reviserRole = $document->uploader->roles->pluck('id');
-                                $userRoles = auth()->user()->roles->pluck('id');
+                @php
+                    $reviserRole = $document->uploader->roles->pluck('id');
+                    $userRoles = auth()->user()->roles->pluck('id');
 
-                                $rightRole = $reviserRole->intersect($userRoles)->isNotEmpty();
-                            @endphp
-                            @if ($rightRole)
+                    $rightRole = $reviserRole->intersect($userRoles)->isNotEmpty();
+                @endphp
+                @if ($rightRole)
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+
                                 <h5 class="mb-4 card-title fw-semibold">
                                     <i class="fa fa-history me-2"></i> Riwayat Revisi
                                 </h5>
@@ -341,17 +362,17 @@
                                                     </td>
                                                     <td>
                                                         <a href="{{ route('document_revision.show-file', ['filename' => $rev->file_path]) }}"
-                                                            target="blank"><i class="ti ti-import"></i></a>
+                                                            target="blank">Download</a>
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
                                 </div>
-                            @endif
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
             @endcan
         </div>
     </div>
