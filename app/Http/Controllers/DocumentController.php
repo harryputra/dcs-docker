@@ -34,25 +34,30 @@ class DocumentController extends Controller
     public function showFile($filename)
     {
         if (str_ends_with($filename, '(Signed).pdf')) {
-            $filePath = Storage::disk('dokumen-approved')->path($filename);
-
-            $mimeType = mime_content_type($filePath);
-
-            return Response::file($filePath, [
-                'Content-Type' => $mimeType
-            ]);
-        } else if (Storage::disk('dokumen-revision')->exists($filename)) {
+            if (Storage::disk('dokumen-approved')->exists($filename)) {
+                $filePath = Storage::disk('dokumen-approved')->path($filename);
+            } elseif (Storage::disk('dokumen-revision')->exists($filename)) {
+                $filePath = Storage::disk('dokumen-revision')->path($filename);
+            } else {
+                abort(404, 'File tidak ditemukan.');
+            }
+        } elseif (Storage::disk('dokumen-revision')->exists($filename)) {
             $filePath = Storage::disk('dokumen-revision')->path($filename);
-
-            $mimeType = mime_content_type($filePath);
-
-            return Response::file($filePath, [
-                'Content-Type' => $mimeType
-            ]);
+        } else {
+            abort(404, 'File tidak ditemukan.');
         }
 
-        return abort(404);
+        if (!file_exists($filePath)) {
+            abort(404, 'File tidak ditemukan di sistem.');
+        }
+
+        $mimeType = mime_content_type($filePath);
+
+        return Response::file($filePath, [
+            'Content-Type' => $mimeType
+        ]);
     }
+
 
     public function getDocByCategory(Request $request)
     {
@@ -61,32 +66,34 @@ class DocumentController extends Controller
         $oldIds = $request->input('ids');
         $category_id = $request->input('categoryID');
         // dd($request);
-        $documents = Document::where('is_active','=' ,true)
-                            ->whereHas('uploader.roles', function ($query) {
-                                $query->whereIn('id', auth()->user()->roles->pluck('id'));
-                            })
-                            ->where('title', 'like', '%' . $query . '%')
-                            ->with(['category','currentRevision']);
-        
+        $documents = Document::where('is_active', '=', true)
+            ->whereHas('uploader.roles', function ($query) {
+                $query->whereIn('id', auth()->user()->roles->pluck('id'));
+            })
+            ->where(function ($q) use ($query) {
+                $q->where('title', 'like', '%' . $query . '%')
+                    ->orWhere('code', 'like', '%' . $query . '%');
+            })
+            ->with(['category', 'currentRevision']);
+
         // Check agar document yang direvisi tidak muncul
-        if($id){
+        if ($id) {
             $documents = $documents->where('id', '!=', $id);
         }
         // Check agar document sesuai dengan kategori
-        if($category_id){
+        if ($category_id) {
             $documents = $documents->where('category_id', $category_id);
         }
         // Check agar dokumen yang direvisi muncul di input
-        if($oldIds){
+        if ($oldIds) {
             $idsArray = explode(',', $oldIds);
             $documents = $documents->whereIn('id', $idsArray)
                 ->whereHas('currentRevision', function ($query) {
-                    $query->whereIn('status', ['Disetujui','Proses Revisi']);
-            });
-            
-        }else{
+                    $query->whereIn('status', ['Disetujui', 'Proses Revisi']);
+                });
+        } else {
             $documents = $documents->whereHas('currentRevision', function ($query) {
-                    $query->whereIn('status', ['Disetujui']);
+                $query->whereIn('status', ['Disetujui']);
             });
         }
 
@@ -98,46 +105,47 @@ class DocumentController extends Controller
     public function dashboard()
     {
         $roles = Auth::user()->roles->pluck('name')->toArray();
-        $commonRoles = array_intersect(['Administrator', 'Pengendali Dokumen', 'Bagian Mutu', 'Kepala Puskesmas','Staff'], $roles);
-        
+        $commonRoles = array_intersect(['Administrator', 'Pengendali Dokumen', 'Bagian Mutu', 'Kepala Puskesmas', 'Staff'], $roles);
+        $categories = \App\Models\Category::orderBy('name')->get();
+
         // PJ Program data
-        if(empty($commonRoles)){
+        if (empty($commonRoles)) {
             $totalDocs = Document::whereHas('uploader.roles', function ($query) {
                 $query->whereIn('id', auth()->user()->roles->pluck('id'));
-            })->with(['uploader','latestHistory'])->count();
+            })->with(['uploader', 'latestHistory'])->count();
             $totalApprovedDocs = Document::whereHas('uploader.roles', function ($query) {
                 $query->whereIn('id', auth()->user()->roles->pluck('id'));
-            })->whereHas('revisions', function ($query){
-                $query->whereIn('status',['Disetujui','Proses Revisi']);
-            })->where('is_active',true)->count();
+            })->whereHas('revisions', function ($query) {
+                $query->whereIn('status', ['Disetujui', 'Proses Revisi']);
+            })->where('is_active', true)->count();
             $totalDeniedDocs = Document::whereHas('uploader.roles', function ($query) {
                 $query->whereIn('id', auth()->user()->roles->pluck('id'));
-            })->whereHas('revisions', function ($query){
-                $query->where('status','Expired');
-            })->where('is_active',false)->count();
+            })->whereHas('revisions', function ($query) {
+                $query->where('status', 'Expired');
+            })->where('is_active', false)->count();
             $totalRevisedDocs = Document::whereHas('uploader.roles', function ($query) {
                 $query->whereIn('id', auth()->user()->roles->pluck('id'));
-            })->whereHas('revisions', function ($query){
-                $query->whereIn('status',['Draft','Proses Revisi','Pengajuan Revisi']);
-            })->where('is_active',false)->count();
+            })->whereHas('revisions', function ($query) {
+                $query->whereIn('status', ['Draft', 'Proses Revisi', 'Pengajuan Revisi']);
+            })->where('is_active', false)->count();
             $documents = Document::whereHas('uploader.roles', function ($query) {
                 $query->whereIn('id', auth()->user()->roles->pluck('id'));
-            })->with(['revisions','currentRevision'])->orderBy('created_at', 'desc')->take(5)->get();
-        }else{
+            })->with(['revisions', 'currentRevision'])->orderBy('created_at', 'desc')->take(5)->get();
+        } else {
             $totalDocs = Document::with('revisions')->count();
-            $totalApprovedDocs = Document::whereHas('revisions', function ($query){
-                $query->whereIn('status',['Disetujui','Proses Revisi']);
-            })->where('is_active',true)->count();
-            $totalDeniedDocs = Document::whereHas('revisions', function ($query){
-                $query->where('status','Expired');
-            })->where('is_active',false)->count();
-            $totalRevisedDocs = Document::whereHas('revisions', function ($query){
-                $query->where('status','Draft');
-            })->where('is_active',false)->count();
-            $documents = Document::with(['revisions','currentRevision'])->orderBy('created_at', 'desc')->take(5)->get();
+            $totalApprovedDocs = Document::whereHas('revisions', function ($query) {
+                $query->whereIn('status', ['Disetujui', 'Proses Revisi']);
+            })->where('is_active', true)->count();
+            $totalDeniedDocs = Document::whereHas('revisions', function ($query) {
+                $query->where('status', 'Expired');
+            })->where('is_active', false)->count();
+            $totalRevisedDocs = Document::whereHas('revisions', function ($query) {
+                $query->where('status', 'Draft');
+            })->where('is_active', false)->count();
+            $documents = Document::with(['revisions', 'currentRevision'])->orderBy('created_at', 'desc')->take(5)->get();
         }
 
-        return view('admin.home', compact('totalDocs', 'totalApprovedDocs', 'totalDeniedDocs', 'totalRevisedDocs','documents'));
+        return view('admin.home', compact('totalDocs', 'totalApprovedDocs', 'totalDeniedDocs', 'totalRevisedDocs', 'documents', 'categories'));
     }
 
     public function index()
@@ -153,7 +161,8 @@ class DocumentController extends Controller
         $documents = Document::whereHas('latestRevision', function ($query) {
             $query->whereNotIn('status', ['Draft', 'Pengajuan Revisi']);
         })->with(['category', 'uploader', 'latestRevision'])->get();
-        return view('admin.active_document.index', compact('documents','userRoles'));
+        $categories = \App\Models\Category::orderBy('name')->get();
+        return view('admin.active_document.index', compact('documents', 'userRoles', 'categories'));
     }
 
     public function create()
@@ -166,92 +175,91 @@ class DocumentController extends Controller
     {
         try {
             $rules = [
-                'title' => 'required|string|max:255',  
+                'title' => 'required|string|max:255',
                 'code' => 'required|string|unique:documents,code|max:30',
                 'category_id' => 'required|exists:categories,id',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
                 'description' => 'required|string',
             ];
 
-            if(auth()->user()->isRole('Administrator')){
+            if (auth()->user()->isRole('Administrator')) {
                 $rules['noApproval'] = 'boolean';
             }
 
             $validated = $request->validate($rules);
 
-        
-        $docData = [
-            'title' => $validated['title'],
-            'code' => $validated['code'],
-            'category_id' => $validated['category_id'],
-            'uploaded_by' => Auth::id(),
-            'current_revision_id' => null,
-        ];
-        
-        $file = $request->file('file_path');
-        $fileExtension = $file->getClientOriginalExtension();
-        
-        if(!empty($validated['noApproval'])){
-            $docData['is_active'] = $validated['noApproval'];
-            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
-        }else{
-            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
 
-        }
-        
-        Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
-        $document = Document::create($docData);
+            $docData = [
+                'title' => $validated['title'],
+                'code' => $validated['code'],
+                'category_id' => $validated['category_id'],
+                'uploaded_by' => Auth::id(),
+                'current_revision_id' => null,
+            ];
 
-        $revDocData = [
-            'document_id' => $document->id,
-            'file_path' => $fileName,
-            'revised_by' => Auth::id(),
-            'revision_number' => 1,
-            'description' => $validated['description'],
-        ];
+            $file = $request->file('file_path');
+            $fileExtension = $file->getClientOriginalExtension();
 
-        if(!empty($validated['noApproval'])){
-            $revDocData['status'] = $validated['noApproval'] == true ? 'Disetujui' : 'Draft';
-            $revDocData['acc_format'] = $validated['noApproval'] == true ? 1 : 0;
-            $revDocData['acc_content'] = $validated['noApproval'] == true ? 1 : 0;
-        }
+            if (!empty($validated['noApproval'])) {
+                $docData['is_active'] = $validated['noApproval'];
+                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+            } else {
+                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+            }
 
-        $revision = DocumentRevision::create($revDocData);
+            Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
+            $document = Document::create($docData);
 
-        foreach ($validated['rev'] ?? [] as $rev) {
-            $currentRevision = DocumentRevision::findOrFail($rev);
-
-            DocumentRevision::create([
-                'document_id' => $rev,
-                'file_path' => $fileName,
-                'revised_by' => $validated['uploaded_by'],
-                'revision_number' => $currentRevision->revision_number + 1,
-                'description' => $validated['description'],
-            ]);
-        }
-
-        $document->update(['current_revision_id' => $revision->id]);
-
-        if(empty($validated['noApproval'])){
-            DocumentHistory::create([
+            $revDocData = [
                 'document_id' => $document->id,
-                'revision_id' => $revision->id,
-                'action' => 'Created',
-                'performed_by' => Auth::id(),
-                'reason' => null,
-            ]);
-            event(new NewCreatedDocument($document, 'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
-        }else{
-            if($validated['noApproval']){
+                'file_path' => $fileName,
+                'revised_by' => Auth::id(),
+                'revision_number' => 1,
+                'description' => $validated['description'],
+            ];
+
+            if (!empty($validated['noApproval'])) {
+                $revDocData['status'] = $validated['noApproval'] == true ? 'Disetujui' : 'Draft';
+                $revDocData['acc_format'] = $validated['noApproval'] == true ? 1 : 0;
+                $revDocData['acc_content'] = $validated['noApproval'] == true ? 1 : 0;
+            }
+
+            $revision = DocumentRevision::create($revDocData);
+
+            foreach ($validated['rev'] ?? [] as $rev) {
+                $currentRevision = DocumentRevision::findOrFail($rev);
+
+                DocumentRevision::create([
+                    'document_id' => $rev,
+                    'file_path' => $fileName,
+                    'revised_by' => $validated['uploaded_by'],
+                    'revision_number' => $currentRevision->revision_number + 1,
+                    'description' => $validated['description'],
+                ]);
+            }
+
+            $document->update(['current_revision_id' => $revision->id]);
+
+            if (empty($validated['noApproval'])) {
                 DocumentHistory::create([
                     'document_id' => $document->id,
                     'revision_id' => $revision->id,
-                    'action' => 'Approved',
+                    'action' => 'Created',
                     'performed_by' => Auth::id(),
                     'reason' => null,
                 ]);
+                event(new NewCreatedDocument($document, 'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
+            } else {
+                if ($validated['noApproval']) {
+                    DocumentHistory::create([
+                        'document_id' => $document->id,
+                        'revision_id' => $revision->id,
+                        'action' => 'Approved',
+                        'performed_by' => Auth::id(),
+                        'reason' => null,
+                    ]);
+                }
             }
-        }
 
             // return redirect()->route('documents.index')->with('success', 'Document created successfully.');
             return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil dibuat dan menunggu persetujuan.');
