@@ -8,11 +8,8 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <h5 class="mb-4 card-title fw-semibold">Pengesahan Dokumen</h5>
-
-
+                        <h2 class="mb-4">Pengesahan Dokumen</h2>
                         <div class="mt-4 table-responsive">
-
                             <table id="tableApproval" class="table table-striped">
                                 <thead>
                                     <tr>
@@ -158,8 +155,7 @@
                                                         <div class="col-md-6 d-flex flex-column">
                                                             <label for="exampleInputEmail1" class="form-label">Berkas
                                                                 Dokumen</label>
-                                                            <a href="/dokumen/DOC-002.pdf" id="rev_url_doc"
-                                                                target="_blank">Download</a>
+                                                            <a id="rev_url_doc" target="_blank">Download</a>
                                                         </div>
                                                     </div>
 
@@ -185,7 +181,7 @@
                             <div class="modal fade" id="modalTerima" data-bs-backdrop="static" data-bs-keyboard="false"
                                 tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                    <div class="modal-content">
+                                    <div class="p-2 modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="staticBackdropLabel">Terima Dokumen</h5>
                                         </div>
@@ -214,7 +210,7 @@
                                                 </div>
                                                 <div class="col-md-12">
                                                     <div class="form-group">
-                                                        <label for="exampleInputEmail1" class="form-label">Kategori
+                                                        <label class="form-label">Kategori
                                                             Dokumen</label>
                                                         <select class="form-control" id="acc_category_doc" disabled>
                                                             @foreach ($categories as $category)
@@ -231,16 +227,15 @@
                                                             disabled aria-describedby="emailHelp">
                                                     </div>
                                                     <div class="col-md-6 d-flex flex-column">
-                                                        <label for="exampleInputEmail1" class="form-label">Berkas
+                                                        <label class="form-label">Berkas
                                                             Dokumen</label>
-                                                        <a href="/dokumen/DOC-002.pdf" id="acc_url_doc"
-                                                            target="_blank">Download</a>
+                                                        <a id="acc_url_doc" target="_blank">Download</a>
                                                     </div>
                                                 </div>
                                                 <div id="reason_container" class="mb-3 row align-items-center"
                                                     style="display: none;">
                                                     <div class="col-md-12">
-                                                        <label for="exampleInputEmail1" class="form-label">Alasan
+                                                        <label class="form-label">Alasan
                                                             Revisi</label>
                                                         <textarea id="acc_reason" class="form-control" disabled></textarea>
                                                     </div>

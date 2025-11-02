@@ -1,4 +1,4 @@
-@extends("layouts.layout_admin")
+@extends('layouts.layout_admin')
 
 @section('title', 'Document')
 
@@ -6,7 +6,7 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-body">
-                <div class="table-responsive mt-4">
+                <div class="mt-4 table-responsive">
                     <table class="table table-striped" id="myTable">
                         <thead>
                             <tr>
@@ -25,16 +25,15 @@
                                     <td>{{ $history->revision->reviser->name }}</td>
                                     <td>{{ $history->revision->revision_number }}</td>
                                     <td>
-                                        <span class="badge
-                                        @if ($history->action === 'Created')
-                                            bg-primary
+                                        <span
+                                            class="badge
+                                        @if ($history->action === 'Created') bg-primary
                                         @elseif ($history->action === 'Revised')
                                             bg-warning
                                         @elseif ($history->action === 'Approved')
                                             bg-success
                                         @elseif ($history->action === 'Rejected')
-                                            bg-danger
-                                        @endif
+                                            bg-danger @endif
                                         ">
                                             {{ $history->action }}
                                         </span>

@@ -8,7 +8,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <h5 class="mb-4 card-title fw-semibold">Dokumen Anda</h5>
+                        <h2 class="mb-4">Dokumen Anda</h2>
                         @can('create-documents')
                             <div class="mb-1 d-flex justify-content-end">
                                 <a href="{{ route('documents.create') }}" class="btn btn-admin d-flex align-items-center">
