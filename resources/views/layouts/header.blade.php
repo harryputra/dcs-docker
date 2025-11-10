@@ -212,7 +212,6 @@
                                             <div id="notification-list" class="notification-container">
                                                 <p id="no-notifications" class="text-muted text-center"
                                                     style="display: none;">Tidak ada notifikasi baru</p>
-                                                <!-- Notifikasi Dummy -->
                                                 @if (count(auth()->user()->unreadNotifications) > 0)
                                                     @foreach (auth()->user()->unreadNotifications as $notification)
                                                         <div id="notify-items"

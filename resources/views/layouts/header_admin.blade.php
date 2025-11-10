@@ -235,7 +235,6 @@
                                             <hr>
                                             <!-- Notify Start -->
                                             <div id="notification-list" class="notification-container">
-                                                <!-- Notifikasi Dummy -->
                                                 @if (count(auth()->user()->unreadNotifications) > 0)
                                                     @foreach (auth()->user()->unreadNotifications->sortByDesc('created_at')->take(5) as $notification)
                                                         <div id="notify-items" class="dclose notification-item highlight" data-notification-id="{{ $notification->id }}">

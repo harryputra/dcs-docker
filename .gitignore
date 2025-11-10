@@ -1,23 +1,66 @@
-/.phpunit.cache
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
+# Laravel & PHP specific
+/vendor/
 .env
-.env.backup
-.env.production
-.phpactor.json
+.env.*
+.phpunit.cache
 .phpunit.result.cache
+.phpactor.json
 Homestead.json
 Homestead.yaml
+auth.json
+
+# Node & Frontend builds
+/node_modules/
 npm-debug.log
 yarn-error.log
-/auth.json
-/.fleet
-/.idea
-/.nova
-/.vscode
+pnpm-debug.log
+/public/build/
+public/hot
+
+# IDE & Editor files
+/.idea/
+/.vscode/
+/.fleet/
 /.zed
+
+# Nova & other IDE configs
+/.nova
+
+# Cache & temporary files
+/storage/*.key
+/storage/pail
+bootstrap/cache/*.php
+
+# PHPUnit & test results
+/.phpunit.result.cache
+/.phpunit.cache
+
+# Composer lock (optional)
+# composer.lock
+
+# Docker files (optional, if you build locally only)
+docker-compose.override.yml
+/.docker/
+.env.docker
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Uploaded user files (aman dari git pull)
+storage/app/public/*
+!storage/app/public/.gitignore
+
+public/uploads/*
+!public/uploads/.gitignore
+
+public/documents/*
+!public/documents/.gitignore
+
+# Optional logs (if any)
+*.log
+storage/logs/*.log
+
+# Optional backup
+.env.backup
+.env.production
