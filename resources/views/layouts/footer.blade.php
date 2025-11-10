@@ -11,9 +11,6 @@
 <!-- jQuery (CDN & Local) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
@@ -52,75 +49,106 @@
     });
 </script>
 
-<!-- SweetAlert Feedback Script -->
+<!-- Custom flash modal & toast (replaces SweetAlert) -->
+
+<!-- Flash Modal -->
+<div class="modal fade" id="flashModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="flashModalHeader">
+                <h5 class="modal-title" id="flashModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="flashModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">
+    <div id="flashToast" class="toast align-items-center text-white bg-success border-0" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="flashToastBody"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <script>
     $(document).ready(function() {
-        // Check for success message
-        @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: '{{ session('success') }}',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#28a745',
-                timer: 3000,
-                timerProgressBar: true,
+        function showFlashModal(title, body, type) {
+            var header = $('#flashModalHeader');
+            header.removeClass('bg-success bg-danger bg-warning bg-info text-white');
+            if (type === 'success') header.addClass('bg-success text-white');
+            else if (type === 'error') header.addClass('bg-danger text-white');
+            else if (type === 'warning') header.addClass('bg-warning');
+            else header.addClass('bg-info text-white');
 
-                customClass: {
-                    popup: 'my-custom-popup'
-                }
-            });
+            $('#flashModalTitle').text(title);
+            $('#flashModalBody').html(body);
+            var modal = new bootstrap.Modal(document.getElementById('flashModal'));
+            modal.show();
+        }
+
+        function showFlashToast(body, type, timeout = 3000) {
+            var toastEl = $('#flashToast');
+            var toastBody = $('#flashToastBody');
+            toastBody.html(body);
+            toastEl.removeClass('bg-success bg-danger bg-warning bg-info');
+            if (type === 'success') toastEl.addClass('bg-success');
+            else if (type === 'error') toastEl.addClass('bg-danger');
+            else if (type === 'warning') toastEl.addClass('bg-warning');
+            else toastEl.addClass('bg-info');
+
+            var toast = new bootstrap.Toast(document.getElementById('flashToast'));
+            toast.show();
+            if (timeout > 0) setTimeout(function() {
+                toast.hide();
+            }, timeout);
+        }
+
+        // Show flash messages from session
+        @if (session('success'))
+            showFlashToast("{{ session('success') }}", 'success', 3500);
         @endif
 
-        // Check for error message
-        @if(session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: '{{ session('error') }}',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#dc3545'
-            });
+        @if (session('error'))
+            showFlashModal('Gagal!', "{{ session('error') }}", 'error');
         @endif
 
-        // Check for validation errors
-        @if($errors->any())
-            Swal.fire({
-                icon: 'error',
-                title: 'Terdapat Kesalahan!',
-                html: '<ul class="text-left">' + 
-                      @foreach($errors->all() as $error)
-                          '<li>{{ $error }}</li>' +
-                      @endforeach
-                      '</ul>',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#dc3545'
-            });
+        @if ($errors->any())
+            var html = '<ul class="mb-0 text-start">';
+            @foreach ($errors->all() as $error)
+                html += '<li>{{ $error }}</li>';
+            @endforeach
+            html += '</ul>';
+            showFlashModal('Terdapat Kesalahan!', html, 'error');
         @endif
-        
-        // Prevent modal from showing when cancel/back button is clicked
+
+        // Keep existing cancel/back protection behaviour (adapted)
         $(document).on('click', '.btn-danger', function(e) {
-            // If it's a link (not button), allow normal navigation
             if ($(this).is('a')) {
                 return true;
             }
-            
-            // If it's a button, check if it's a cancel/back button
+
             var buttonText = $(this).text().toLowerCase();
-            if (buttonText.includes('kembali') || buttonText.includes('cancel') || buttonText.includes('batal')) {
+            if (buttonText.includes('kembali') || buttonText.includes('cancel') || buttonText.includes(
+                    'batal')) {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                // Try to go back in history, fallback to specific routes
                 if (window.history.length > 1) {
                     window.history.back();
                 } else {
-                    // Fallback redirect based on current URL
                     var currentPath = window.location.pathname;
                     if (currentPath.includes('document')) {
-                        window.location.href = '{{ route("document_revision.index") }}';
+                        window.location.href = '{{ route('document_revision.index') }}';
                     } else if (currentPath.includes('categor')) {
-                        window.location.href = '{{ route("categories.index") }}';
+                        window.location.href = '{{ route('categories.index') }}';
                     } else {
                         window.location.href = '/dashboard';
                     }
@@ -128,12 +156,12 @@
                 return false;
             }
         });
-        
-        // Prevent form submission when Enter is pressed on cancel buttons
+
         $(document).on('keydown', '.btn-danger', function(e) {
-            if (e.which === 13 || e.which === 32) { // Enter or Space
+            if (e.which === 13 || e.which === 32) {
                 var buttonText = $(this).text().toLowerCase();
-                if (buttonText.includes('kembali') || buttonText.includes('cancel') || buttonText.includes('batal')) {
+                if (buttonText.includes('kembali') || buttonText.includes('cancel') || buttonText
+                    .includes('batal')) {
                     e.preventDefault();
                     $(this).click();
                     return false;

@@ -44,7 +44,9 @@
                                     <td>{{ \Carbon\Carbon::parse($history->created_at)->format('H:i:s-d/m/Y') }}</td>
                                     <td>
                                         <a href="{{ route('document_histories.show', $history) }}"
-                                            class="btn btn-sm btn-admin">View</a>
+                                            class="btn btn-sm btn-admin" title="Lihat Detail">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach

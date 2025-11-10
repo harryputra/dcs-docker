@@ -14,6 +14,8 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\LogoutResponse;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -22,7 +24,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        Fortify::loginView(function() {
+        Fortify::loginView(function () {
             return view('auth.login');
         });
 
@@ -39,9 +41,6 @@ class FortifyServiceProvider extends ServiceProvider
                 return redirect('/');
             }
         });
-
-
-
     }
 
     /**
@@ -49,13 +48,27 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Custom authentication dengan pesan Bahasa Indonesia
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', $request->email)->first();
+
+            if ($user && Hash::check($request->password, $user->password)) {
+                return $user;
+            }
+
+            // Throw validation exception dengan pesan custom Bahasa Indonesia
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                Fortify::username() => ['Email atau password salah.'],
+            ]);
+        });
+
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())) . '|' . $request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
         });

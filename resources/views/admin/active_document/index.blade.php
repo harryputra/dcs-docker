@@ -126,13 +126,16 @@
                                     <td class="px-6 py-4 text-center">{{ $document->uploader->name }}</td>
                                     <td class="px-6 py-4 text-center">
                                         <a href="{{ route('documents.show', ['document' => $document->id]) }}"
-                                            class="btn btn-admin btn-sm">Detail</a>
+                                            class="btn btn-admin btn-sm" title="Lihat Detail">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
                                         @if (
                                             !empty(array_intersect(['administrator', 'bagian-mutu', 'pengendali-dokumen', 'kepala-puskesmas'], $userRoles)) &&
                                                 $document->latestRevision->status === 'Disetujui' &&
                                                 $document->is_active)
                                             <button type="button" id="btn-modalTolak" class="btn btn-approver btn-sm"
                                                 data-bs-toggle="modal" data-bs-target="#modalTolak"
+                                                title="Nonaktifkan Dokumen">
                                                 data-id="{{ $document->currentRevision->id }}">
                                                 Revisi
                                             </button>

@@ -151,7 +151,7 @@ class DocumentController extends Controller
 
     public function index()
     {
-        $documents = Document::with(['category', 'uploader', 'currentRevision'])->get();
+        $documents = Document::with(['category', 'uploader', 'currentRevision'])->paginate(10);
 
         return view('admin.documents.index', compact('documents'));
     }
@@ -177,7 +177,7 @@ class DocumentController extends Controller
         try {
             $rules = [
                 'title' => 'required|string|max:255',
-                'code' => 'required|string|unique:documents,code|max:30',
+                'code' => 'required|string|unique:documents,code|max:50',
                 'category_id' => 'required|exists:categories,id',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
                 'description' => 'required|string',
@@ -279,56 +279,76 @@ class DocumentController extends Controller
 
     public function edit(Document $document)
     {
-        $categories = Category::pluck('name', 'id');
-        $users = User::pluck('name', 'id');
-        return view('documents.edit', compact('document', 'categories', 'users'));
+        $categories = Category::all();
+        $users = User::all();
+        return view('admin.documents.edit', compact('document', 'categories', 'users'));
     }
 
     public function update(Request $request, Document $document)
     {
         $validated = $request->validate([
+            'code' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'uploaded_by' => 'required|exists:users,id',
-            'file_path' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx',
+            'file_path' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'description' => 'required|string',
-            'reason' => 'required|string',
+            'noApproval' => 'nullable|boolean',
         ]);
 
-        $path = $document->currentRevision->file_path;
-
-        // Simpan file baru jika diunggah
-        if ($request->hasFile('file_path')) {
-            $path = $request->file('file_path')->store('', 'dokumen');
-        }
-
-        // Buat revisi baru
-        $revision = DocumentRevision::create([
-            'document_id' => $document->id,
-            'file_path' => $path,
-            'revised_by' => $validated['uploaded_by'],
-            'revision_number' => $document->currentRevision ? $document->currentRevision->revision_number + 1 : 1,
-            'description' => $validated['description'],
-        ]);
-
-        // Perbarui dokumen dengan revisi saat ini
+        // Update data dokumen
         $document->update([
+            'code' => $validated['code'],
             'title' => $validated['title'],
             'category_id' => $validated['category_id'],
-            'uploaded_by' => $validated['uploaded_by'],
-            'current_revision_id' => $revision->id,
         ]);
 
-        // Simpan ke riwayat dokumen
-        DocumentHistory::create([
-            'document_id' => $document->id,
-            'revision_id' => $revision->id,
-            'action' => 'Revised',
-            'performed_by' => $validated['uploaded_by'],
-            'reason' => $validated['reason'],
-        ]);
+        // Update deskripsi di revision
+        if ($document->currentRevision) {
+            $document->currentRevision->update([
+                'description' => $validated['description'],
+            ]);
+        }
 
-        return redirect()->route('documents.index')->with('success', 'Document updated successfully.');
+        // Update file jika ada upload baru
+        if ($request->hasFile('file_path')) {
+            // Hapus file lama jika ada
+            if ($document->currentRevision && $document->currentRevision->file_path) {
+                // Coba hapus dari berbagai disk
+                if (Storage::disk('dokumen')->exists($document->currentRevision->file_path)) {
+                    Storage::disk('dokumen')->delete($document->currentRevision->file_path);
+                } elseif (Storage::disk('dokumen-revision')->exists($document->currentRevision->file_path)) {
+                    Storage::disk('dokumen-revision')->delete($document->currentRevision->file_path);
+                }
+            }
+
+            // Simpan file baru ke disk dokumen-revision (karena masih draft)
+            $path = $request->file('file_path')->store('', 'dokumen-revision');
+
+            // Update file_path di revision
+            $document->currentRevision->update([
+                'file_path' => $path,
+            ]);
+        }
+
+        // Jika admin centang "Tanpa Approval", langsung approve
+        if (auth()->user()->isRole('Administrator') && $request->noApproval) {
+            $document->currentRevision->update([
+                'status' => 'Disetujui',
+                'acc_format' => true,
+                'acc_content' => true,
+            ]);
+
+            // Buat history untuk approval langsung
+            DocumentHistory::create([
+                'document_id' => $document->id,
+                'revision_id' => $document->currentRevision->id,
+                'action' => 'Approved',
+                'performed_by' => auth()->id(),
+                'reason' => 'Approved by Administrator without approval process',
+            ]);
+        }
+
+        return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil diperbarui.');
     }
 
 

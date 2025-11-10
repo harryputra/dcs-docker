@@ -80,7 +80,22 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus kategori. Silakan coba lagi. Error: ' . $e->getMessage());
         }
+    }
 
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+    public function bulkDelete(Request $request)
+    {
+        try {
+            $ids = json_decode($request->ids);
+
+            if (empty($ids) || !is_array($ids)) {
+                return redirect()->back()->with('error', 'Tidak ada kategori yang dipilih.');
+            }
+
+            $count = Category::whereIn('id', $ids)->delete();
+
+            return redirect()->route('categories.index')->with('success', "$count kategori berhasil dihapus.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus kategori. Silakan coba lagi. Error: ' . $e->getMessage());
+        }
     }
 }

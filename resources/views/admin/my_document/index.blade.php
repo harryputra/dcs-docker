@@ -87,20 +87,96 @@
                                             </td>
                                             <td>
                                                 @canany(['edit-documents', 'edit-revisions'])
-                                                    <div class="d-flex">
+                                                    <div class="gap-1 d-flex">
                                                         <a href="{{ route('document_revision.show', ['documentRevision' => $document->latestHistory->revision->id]) }}"
-                                                            class="btn btn-sm btn-admin me-1">Detail</a>
-                                                        @if (
-                                                            $document->currentRevision->document_id === $document->id &&
-                                                                ($document->latestHistory->revision->status == 'Disetujui' ||
-                                                                    $document->latestHistory->revision->status == 'Pengajuan Revisi'))
-                                                            <a href="{{ route('document_revision.edit', $document->latestHistory->revision->id) }}"
-                                                                class="btn btn-sm btn-approver">Revisi</a>
+                                                            class="btn btn-sm btn-admin" title="Lihat Detail">
+                                                            <i class="ti ti-eye"></i>
+                                                        </a>
+
+                                                        @if (!$document->latestHistory->revision->acc_format && !$document->latestHistory->revision->acc_content)
+                                                            @if ($document->latestHistory->revision->status === 'Draft')
+                                                                {{-- Untuk dokumen baru yang masih Draft, gunakan route documents.edit --}}
+                                                                <a href="{{ route('documents.edit', $document->id) }}"
+                                                                    class="btn btn-sm btn-approver" title="Edit Dokumen">
+                                                                    <i class="ti ti-pencil"></i>
+                                                                </a>
+                                                            @else
+                                                                {{-- Untuk revisi dokumen yang sudah disetujui, gunakan route document_revision.edit --}}
+                                                                <a href="{{ route('document_revision.edit', $document->latestHistory->revision->id) }}"
+                                                                    class="btn btn-sm btn-approver" title="Revisi Dokumen">
+                                                                    <i class="ti ti-pencil"></i>
+                                                                </a>
+                                                            @endif
                                                         @endif
+
+                                                        @can('delete-documents')
+                                                            @if (in_array($document->latestHistory->revision->status, ['Draft', 'Proses Revisi', 'Pengajuan Revisi']) &&
+                                                                    !$document->latestHistory->revision->acc_format &&
+                                                                    !$document->latestHistory->revision->acc_content)
+                                                                <button type="button" class="btn btn-sm btn-danger"
+                                                                    title="Hapus Dokumen" data-bs-toggle="modal"
+                                                                    data-bs-target="#deleteModal{{ $document->id }}"
+                                                                    data-doc-title="{{ $document->title }}">
+                                                                    <i class="ti ti-trash"></i>
+                                                                </button>
+                                                            @endif
+                                                        @endcan
                                                     </div>
                                                 @endcanany
                                             </td>
                                         </tr>
+
+                                        {{-- Modal Delete untuk setiap dokumen --}}
+                                        @can('delete-documents')
+                                            @if (in_array($document->latestHistory->revision->status, ['Draft', 'Proses Revisi', 'Pengajuan Revisi']) &&
+                                                    !$document->latestHistory->revision->acc_format &&
+                                                    !$document->latestHistory->revision->acc_content)
+                                                <div class="modal fade" id="deleteModal{{ $document->id }}" tabindex="-1"
+                                                    aria-labelledby="deleteModalLabel{{ $document->id }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title"
+                                                                    id="deleteModalLabel{{ $document->id }}">
+                                                                    <i class="ti ti-alert-triangle"></i> Konfirmasi Hapus
+                                                                    Dokumen
+                                                                </h5>
+                                                                <button type="button" class="btn-close btn-close-white"
+                                                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p class="mb-2">Apakah Anda yakin ingin menghapus dokumen ini?
+                                                                </p>
+                                                                <div class="alert alert-warning">
+                                                                    <strong>Dokumen:</strong> {{ $document->title }}<br>
+                                                                    <strong>Nomor:</strong> {{ $document->code }}
+                                                                </div>
+                                                                <p class="text-danger mb-0">
+                                                                    <i class="ti ti-alert-circle"></i>
+                                                                    <strong>Perhatian:</strong> Semua data terkait akan dihapus
+                                                                    secara permanen dan tidak dapat dikembalikan.
+                                                                </p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">
+                                                                    <i class="ti ti-x"></i> Batal
+                                                                </button>
+                                                                <form
+                                                                    action="{{ route('document_revision.destroy', $document->latestHistory->revision->id) }}"
+                                                                    method="POST" class="d-inline">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="btn btn-danger">
+                                                                        <i class="ti ti-trash"></i> Ya, Hapus
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endcan
                                     @endforeach
                                 </tbody>
                             </table>

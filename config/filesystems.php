@@ -57,6 +57,14 @@ return [
             'throw' => false,
         ],
 
+        'dokumen' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/dokumen'),
+            'url' => env('APP_URL') . '/storage/dokumen',
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
         'dokumen-revision' => [
             'driver' => 'local',
             'root' => storage_path('app/public/dokumen_revision'),

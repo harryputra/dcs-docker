@@ -8,6 +8,9 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentHistoryController;
 use App\Http\Controllers\DocumentRevisionController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\CustomUserController;
+use App\Http\Controllers\CustomRoleController;
+use App\Http\Controllers\CustomPermissionController;
 use App\Notifications\NewUserPasswordChange;
 
 Route::get('/', function () {
@@ -23,7 +26,12 @@ Route::get('/dashboards', function () {
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/active_document',[DocumentController::class,'indexActive'])->name('document.active');
+    // Override package RBAC delete routes to use custom controllers that return flash messages
+    Route::post('rbac/users/delete', [CustomUserController::class, 'delete'])->name('delete_user');
+    Route::post('rbac/roles/delete', [CustomRoleController::class, 'delete'])->name('delete_role');
+    Route::post('rbac/permissions/delete', [CustomPermissionController::class, 'delete'])->name('delete_permission');
+
+    Route::get('/active_document', [DocumentController::class, 'indexActive'])->name('document.active');
 
     // Route::middleware(['role:Admin'])->group(function () {
     //     Route::get('/users/create', [UserController::class, 'create'])->name('create_users');
@@ -38,15 +46,15 @@ Route::middleware(['auth'])->group(function () {
     // });
 
     Route::get('/dashboards', function () {
-            return view('admin.dashboard');
+        return view('admin.dashboard');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    
+
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
     Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notification.markRead');
-    Route::get('/notifications',[NotificationController::class,'index'])->name('notifications');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
 
     Route::get('/active_document', [DocumentController::class, 'indexActive'])->name('document.active')->middleware('can:active-document');
     Route::get('/dashboard', [DocumentController::class, 'dashboard'])->name('dashboard');
@@ -67,6 +75,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::delete('/categories-bulk-delete', [CategoryController::class, 'bulkDelete'])->name('categories.bulkDelete');
     });
 
 
@@ -75,6 +84,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/document_revision/{documentRevision}/edit', [DocumentRevisionController::class, 'edit'])->name('document_revision.edit')->middleware('can:edit-revisions');
     Route::get('/document_approval/{documentRevision}/edit', [DocumentRevisionController::class, 'editApproval'])->name('document_approval.edit')->middleware('can:edit-approval');
     Route::put('/document_revision/{documentRevision}', [DocumentRevisionController::class, 'update'])->name('document_revision.update')->middleware('can:edit-revisions');
+    Route::delete('/document_revision/{documentRevision}', [DocumentRevisionController::class, 'destroy'])->name('document_revision.destroy')->middleware('can:delete-documents');
     Route::get('/document_revision/detail/{documentRevision}', [DocumentRevisionController::class, 'show'])->name('document_revision.show')->middleware('can:edit-revisions');
     Route::get('/document_revision/data', [DocumentRevisionController::class, 'getDoc'])->name('documents.get.document')->middleware('can:edit-approval');
     Route::put('/document_approval/{documentRevision}', [DocumentRevisionController::class, 'updateApproval'])->name('document_approval.update')->middleware('can:edit-approval');
@@ -94,5 +104,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/documents/download/{filename}', [DocumentController::class, 'downloadDocument'])->name('file.dokumen')->middleware('can:view-documents');
     Route::get('/file/dokumen/{filename}', [DocumentController::class, 'showFile'])->name('document_revision.show-file')->middleware('can:view-documents');
     Route::get('/documents_category', [DocumentController::class, 'getDocByCategory'])->name('document.getByCategory')->middleware('can:view-documents');
-
 });

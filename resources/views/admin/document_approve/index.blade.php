@@ -72,9 +72,9 @@
                                                     <td>
                                                         <button type="button" id="btn-modalTerima"
                                                             class="btn btn-secondary btn-sm" data-bs-toggle="modal"
-                                                            data-bs-target="#modalTerima"
-                                                            data-id="{{ $latestDocRevision->id }}">
-                                                            Detail
+                                                            data-bs-target="#modalTerima" data-id="{{ $latestDocRevision->id }}"
+                                                            title="Lihat Detail">
+                                                            <i class="ti ti-eye"></i>
                                                         </button>
                                                     </td>
                                                 @else
@@ -82,21 +82,22 @@
                                                         @if (auth()->user()->isRole('kepala-puskesmas') && $latestDocRevision->acc_format && $latestDocRevision->acc_content)
                                                             <span style="display: none">z</span>
                                                             <a href="{{ route('document_approval.edit', ['documentRevision' => $latestDocRevision->id]) }}"
-                                                                class="btn btn-admin btn-sm">
-                                                                Terima
+                                                                class="btn btn-admin btn-sm" title="Terima Dokumen">
+                                                                <i class="ti ti-check"></i>
                                                             </a>
                                                         @else
                                                             <button type="button" id="btn-modalTerima"
                                                                 class="btn btn-admin btn-sm" data-bs-toggle="modal"
                                                                 data-bs-target="#modalTerima"
-                                                                data-id="{{ $latestDocRevision->id }}">
-                                                                Terima
+                                                                data-id="{{ $latestDocRevision->id }}" title="Terima Dokumen">
+                                                                <i class="ti ti-check"></i>
                                                             </button>
                                                         @endif
                                                         <button type="button" id="btn-modalTolak"
                                                             class="btn btn-approver btn-sm" data-bs-toggle="modal"
-                                                            data-bs-target="#modalTolak" data-id="{{ $latestDocRevision->id }}">
-                                                            Revisi
+                                                            data-bs-target="#modalTolak" data-id="{{ $latestDocRevision->id }}"
+                                                            title="Minta Revisi">
+                                                            <i class="ti ti-refresh"></i>
                                                         </button>
                                                     </td>
                                                 @endif

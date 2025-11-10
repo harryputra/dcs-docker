@@ -154,12 +154,13 @@ class DocumentRevisionController extends Controller
                 ->with('info', 'Dokumen ini sudah tidak berlaku. Anda dialihkan ke halaman detail dokumen.');
         }
 
-        // Jika dokumen dalam status Draft atau Proses Revisi, redirect ke halaman detail
-        if (in_array($documentRevision->status, ['Draft', 'Proses Revisi']) && $rightRole) {
+        // Jika dokumen sudah ada approval dari Pendok atau Mutu, tidak bisa edit (race condition protection)
+        if (($documentRevision->acc_format || $documentRevision->acc_content) && $rightRole) {
             return redirect()->route('document_revision.show', ['documentRevision' => $documentRevision->id])
-                ->with('info', 'Dokumen masih dalam proses. Anda tidak dapat mengedit saat ini.');
+                ->with('info', 'Dokumen sedang dalam proses approval. Anda tidak dapat mengedit saat ini.');
         }
 
+        // Method ini hanya untuk revisi dokumen yang sudah disetujui atau pengajuan revisi
         if (($documentRevision->status === 'Disetujui' || $documentRevision->status === 'Pengajuan Revisi') && $rightRole) {
             $reason = $documentRevision->status === 'Pengajuan Revisi' ? DocumentHistory::with('revision')->where('document_id', $documentRevision->document->id)->where('revision_id', $documentRevision->id)->where('action', 'Rejected')->first()->reason : '';
             $approvedDocs = Document::where('is_active', true)
@@ -190,6 +191,16 @@ class DocumentRevisionController extends Controller
     public function update(Request $request, DocumentRevision $documentRevision)
     {
         try {
+            // Cek apakah status dokumen sudah disetujui atau sedang dalam proses approval
+            if (in_array($documentRevision->status, ['Disetujui'])) {
+                return redirect()->back()->with('error', 'Dokumen yang sudah disetujui tidak dapat diubah. Silakan buat revisi baru jika diperlukan.');
+            }
+
+            // Cek apakah dokumen sedang dalam proses approval (acc_format atau acc_content sudah true)
+            if ($documentRevision->acc_format || $documentRevision->acc_content) {
+                return redirect()->back()->with('error', 'Dokumen sedang dalam proses approval. Tidak dapat diubah saat ini. Silakan hubungi approver untuk membatalkan approval terlebih dahulu.');
+            }
+
             $rules = [
                 'title' => 'required|string|max:255',
                 'category_id' => 'required',
@@ -399,6 +410,54 @@ class DocumentRevisionController extends Controller
             return redirect()->route('document_approval.index')->with('success', 'Status dokumen berhasil diperbarui.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui status dokumen. Silakan coba lagi. Error: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy(DocumentRevision $documentRevision)
+    {
+        try {
+            // Cek apakah user adalah uploader atau admin
+            $isUploader = $documentRevision->checkUploaderRoles();
+            $isAdmin = auth()->user()->isRole('Administrator');
+
+            if (!$isUploader && !$isAdmin) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menghapus dokumen ini.');
+            }
+
+            // Cek apakah dokumen sudah disetujui atau sedang dalam proses approval
+            if ($documentRevision->status === 'Disetujui') {
+                return redirect()->back()->with('error', 'Dokumen yang sudah disetujui tidak dapat dihapus. Dokumen aktif harus tetap tersimpan untuk arsip.');
+            }
+
+            if ($documentRevision->acc_format || $documentRevision->acc_content) {
+                return redirect()->back()->with('error', 'Dokumen sedang dalam proses approval. Tidak dapat dihapus saat ini.');
+            }
+
+            // Hanya bisa hapus jika status Draft atau Pengajuan Revisi
+            if (!in_array($documentRevision->status, ['Draft', 'Proses Revisi', 'Pengajuan Revisi'])) {
+                return redirect()->back()->with('error', 'Hanya dokumen dengan status Draft, Proses Revisi, atau Pengajuan Revisi yang dapat dihapus.');
+            }
+
+            $document = $documentRevision->document;
+            $documentTitle = $document->title;
+
+            // Hapus file dari storage jika ada
+            if (Storage::disk('dokumen-revision')->exists($documentRevision->file_path)) {
+                Storage::disk('dokumen-revision')->delete($documentRevision->file_path);
+            }
+
+            // Hapus semua revision history terkait dokumen ini
+            DocumentHistory::where('document_id', $document->id)->delete();
+
+            // Hapus semua revision terkait dokumen ini
+            DocumentRevision::where('document_id', $document->id)->delete();
+
+            // Hapus dokumen utama
+            $document->delete();
+
+            return redirect()->route('document_revision.index')->with('success', 'Dokumen "' . $documentTitle . '" berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus dokumen. Silakan coba lagi. Error: ' . $e->getMessage());
         }
     }
 }

@@ -16,30 +16,32 @@
 
 <style>
     #notificationDropdown {
-        max-height: 400px; /* Set a maximum height for the dropdown */
-        overflow-y: auto;  /* Make the dropdown scrollable */
+        max-height: 400px;
+        /* Set a maximum height for the dropdown */
+        overflow-y: auto;
+        /* Make the dropdown scrollable */
     }
 
-  .dropdown-width {
-      width: 400px;
-  }
+    .dropdown-width {
+        width: 400px;
+    }
 
-  .notification-item {
-      padding: 10px;
-      border: 1px solid #ddd;
-      margin-bottom: 10px;
-  }
+    .notification-item {
+        padding: 10px;
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+    }
 
-  .highlight {
-      background-color: #f0f8ff;
-  }
+    .highlight {
+        background-color: #f0f8ff;
+    }
 
-  .notification-time{
-    font-size: 0.75rem;
-    color: gray;
-  }
+    .notification-time {
+        font-size: 0.75rem;
+        color: gray;
+    }
 
-  .my-custom-popup {
+    .my-custom-popup {
         border-radius: 25px !important;
         font-family: 'Arial', sans-serif !important;
     }
@@ -55,10 +57,10 @@
             <!-- Sidebar scroll-->
             <div>
                 <div class="brand-logo d-flex align-items-center justify-content-between">
-                    <a href="/" class="text-nowrap logo-img">
-                        <img src="{{ asset('assets/images/logos/sidebar.png') }}" width="215" alt="" />
+                    <a href="/" class="mt-3 text-nowrap logo-img">
+                        <img src="{{ asset('assets/images/logos/sidebar.webp') }}" width="150" alt="" />
                     </a>
-                    <div class="close-btn d-xl-none d-block sidebartoggler cursor-pointer" id="sidebarCollapse">
+                    <div class="cursor-pointer close-btn d-xl-none d-block sidebartoggler" id="sidebarCollapse">
                         <i class="ti ti-x fs-8"></i>
                     </div>
                 </div>
@@ -213,66 +215,78 @@
                             </a>
                         </li>
                         <!-- Dropdown Notify Section Start -->
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link nav-icon-hover position-relative " href="javascript:void(0)" id="drop"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="ti ti-bell-ringing"></i>
-                                        @if (count(auth()->user()->unreadNotifications) > 0)
-                                          <span id="unread-notification-count" class="position-absolute start-100 translate-middle badge rounded-pill bg-admin">
-                                            {{count(auth()->user()->unreadNotifications)}}
-                                            <span class="visually-hidden">unread messages</span>
-                                          </span>
-                                        @endif
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up start-50 dropdown-width p-1"
-                                        aria-labelledby="drop" id="notificationDropdown">
-                                        <div class="notification-body">
-                                            <div class="d-flex justify-content-between align-items-center p-2">
-                                                <p class="text-dark fw-bold fs-5 mb-0">Notifikasi</p>
-                                                <a href="javascript:void()" id="mark-read" class="text-primary fs-4 fw-bold"
-                                                    >Tandai Semua Dibaca</a>
-                                            </div>
-                                            <hr>
-                                            <!-- Notify Start -->
-                                            <div id="notification-list" class="notification-container">
-                                                @if (count(auth()->user()->unreadNotifications) > 0)
-                                                    @foreach (auth()->user()->unreadNotifications->sortByDesc('created_at')->take(5) as $notification)
-                                                        <div id="notify-items" class="dclose notification-item highlight" data-notification-id="{{ $notification->id }}">
-                                                            <a href="{{ $notification->data['link'] }}" class="text-dark">
-                                                                <span class="notification-time">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0z" /><path d="M14.5 10.5l-2.5 2.5" /><path d="M17 8l1 -1" /><path d="M14 3h-4" /></svg>
-                                                                    ({{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }})
-                                                                </span>
-                                                                <br>
-                                                                {{ $notification->data['message'] }}
-                                                            </a>
-                                                        </div>
-                                                    @endforeach
-                                            </div>
-                                        @else
-                                            <div id="notify-items"
-                                                class="dclose notification-item d-flex justify-content-center">
-                                                <p>Tidak Ada Notifikasi Baru.</p>
-                                            </div>
-                                        @endif
-                                        <hr>
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <a href="{{route('notifications')}}" class="btn btn-outline-secondary dclose mb-2" id="view-all-notifications">Lihat Semua</a>
-                                        </div>
-                                        <!-- Notify End -->
-                                        </div>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-icon-hover position-relative " href="javascript:void(0)"
+                                id="drop" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ti ti-bell-ringing"></i>
+                                @if (count(auth()->user()->unreadNotifications) > 0)
+                                    <span id="unread-notification-count"
+                                        class="position-absolute start-100 translate-middle badge rounded-pill bg-admin">
+                                        {{ count(auth()->user()->unreadNotifications) }}
+                                        <span class="visually-hidden">unread messages</span>
+                                    </span>
+                                @endif
+                            </a>
+                            <div class="p-1 dropdown-menu dropdown-menu-end dropdown-menu-animate-up start-50 dropdown-width"
+                                aria-labelledby="drop" id="notificationDropdown">
+                                <div class="notification-body">
+                                    <div class="p-2 d-flex justify-content-between align-items-center">
+                                        <p class="mb-0 text-dark fw-bold fs-5">Notifikasi</p>
+                                        <a href="javascript:void()" id="mark-read"
+                                            class="text-primary fs-4 fw-bold">Tandai Semua Dibaca</a>
                                     </div>
-                                </li>
+                                    <hr>
+                                    <!-- Notify Start -->
+                                    <div id="notification-list" class="notification-container">
+                                        @if (count(auth()->user()->unreadNotifications) > 0)
+                                            @foreach (auth()->user()->unreadNotifications->sortByDesc('created_at')->take(5) as $notification)
+                                                <div id="notify-items" class="dclose notification-item highlight"
+                                                    data-notification-id="{{ $notification->id }}">
+                                                    <a href="{{ $notification->data['link'] }}" class="text-dark">
+                                                        <span class="notification-time">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                                                                height="16" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0z" />
+                                                                <path d="M14.5 10.5l-2.5 2.5" />
+                                                                <path d="M17 8l1 -1" />
+                                                                <path d="M14 3h-4" />
+                                                            </svg>
+                                                            ({{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }})
+                                                        </span>
+                                                        <br>
+                                                        {{ $notification->data['message'] }}
+                                                    </a>
+                                                </div>
+                                            @endforeach
+                                    </div>
+                                @else
+                                    <div id="notify-items"
+                                        class="dclose notification-item d-flex justify-content-center">
+                                        <p>Tidak Ada Notifikasi Baru.</p>
+                                    </div>
+                                    @endif
+                                    <hr>
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <a href="{{ route('notifications') }}"
+                                            class="mb-2 btn btn-outline-secondary dclose"
+                                            id="view-all-notifications">Lihat Semua</a>
+                                    </div>
+                                    <!-- Notify End -->
+                                </div>
+                            </div>
+                        </li>
                         <!-- Dropdown Notify Section End -->
                     </ul>
-                    <div class="navbar-collapse justify-content-end px-0" id="navbarNav">
-                        <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-end">
+                    <div class="px-0 navbar-collapse justify-content-end" id="navbarNav">
+                        <ul class="flex-row navbar-nav ms-auto align-items-center justify-content-end">
                             <li class="nav-item dropdown">
-                                <a class="nav-link nav-icon-hover-admin" href="{{route('profile')}}">
+                                <a class="nav-link nav-icon-hover-admin" href="{{ route('profile') }}">
                                     <img src="{{ asset('assets/images/profile/user-1.jpg') }}" alt=""
                                         width="35" height="35" class="rounded-circle">
                                 </a>
-                               
+
                             </li>
                         </ul>
                     </div>
