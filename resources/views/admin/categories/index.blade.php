@@ -8,7 +8,13 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <h2 class="mb-4">Kategori Dokumen</h2>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h2 class="mb-2">Kategori Dokumen</h2>
+                                <x-breadcrumb :breadcrumbs="[['title' => 'Kategori Dokumen', 'url' => route('categories.index')]]" />
+                            </div>
+                        </div>
+
                         <div class="mb-1 d-flex justify-content-between align-items-center">
                             <div>
                                 <button id="deleteSelectedBtn" class="btn btn-danger" style="display: none;">

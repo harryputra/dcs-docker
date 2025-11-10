@@ -4,7 +4,13 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-body">
-                <h2 class="mb-4">Roles</h2>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2 class="mb-2">Roles</h2>
+                        <x-breadcrumb :breadcrumbs="[['title' => 'Roles', 'url' => route('list_roles')]]" />
+                    </div>
+                </div>
+
                 <div class="mb-3 d-flex justify-content-between align-items-center">
                     <div>
                         <button id="deleteSelectedBtn" class="btn btn-danger" style="display: none;">

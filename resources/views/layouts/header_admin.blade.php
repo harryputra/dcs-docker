@@ -230,50 +230,65 @@
                             <div class="p-1 dropdown-menu dropdown-menu-end dropdown-menu-animate-up start-50 dropdown-width"
                                 aria-labelledby="drop" id="notificationDropdown">
                                 <div class="notification-body">
-                                    <div class="p-2 d-flex justify-content-between align-items-center">
-                                        <p class="mb-0 text-dark fw-bold fs-5">Notifikasi</p>
+                                    <div
+                                        class="px-3 py-3 d-flex justify-content-between align-items-center border-bottom">
+                                        <h6 class="mb-0 fw-semibold">Notifikasi</h6>
                                         <a href="javascript:void()" id="mark-read"
-                                            class="text-primary fs-4 fw-bold">Tandai Semua Dibaca</a>
+                                            class="badge bg-light-primary text-primary text-decoration-none">
+                                            <i class="ti ti-check fs-4"></i> Tandai Semua
+                                        </a>
                                     </div>
-                                    <hr>
+
                                     <!-- Notify Start -->
-                                    <div id="notification-list" class="notification-container">
+                                    <div id="notification-list" class="notification-container"
+                                        style="max-height: 400px; overflow-y: auto;">
                                         @if (count(auth()->user()->unreadNotifications) > 0)
                                             @foreach (auth()->user()->unreadNotifications->sortByDesc('created_at')->take(5) as $notification)
-                                                <div id="notify-items" class="dclose notification-item highlight"
-                                                    data-notification-id="{{ $notification->id }}">
-                                                    <a href="{{ $notification->data['link'] }}" class="text-dark">
-                                                        <span class="notification-time">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                                height="16" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
-                                                                <path d="M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0z" />
-                                                                <path d="M14.5 10.5l-2.5 2.5" />
-                                                                <path d="M17 8l1 -1" />
-                                                                <path d="M14 3h-4" />
-                                                            </svg>
-                                                            ({{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }})
-                                                        </span>
-                                                        <br>
-                                                        {{ $notification->data['message'] }}
+                                                <div id="notify-items"
+                                                    class="p-3 dclose notification-item border-bottom"
+                                                    data-notification-id="{{ $notification->id }}"
+                                                    style="background: #f8f9ff; cursor: pointer; transition: all 0.3s ease;"
+                                                    onmouseover="this.style.background='#eef2ff'"
+                                                    onmouseout="this.style.background='#f8f9ff'">
+                                                    <a href="{{ $notification->data['link'] }}"
+                                                        class="text-dark text-decoration-none d-block">
+                                                        <div class="gap-2 d-flex align-items-start">
+                                                            <div class="flex-shrink-0">
+                                                                <span
+                                                                    class="p-2 badge bg-light-primary text-primary rounded-circle">
+                                                                    <i class="ti ti-bell fs-5"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <p class="mb-1 fw-medium">
+                                                                    {{ $notification->data['message'] }}</p>
+                                                                <small
+                                                                    class="gap-1 text-muted d-flex align-items-center">
+                                                                    <i class="ti ti-clock"
+                                                                        style="font-size: 14px;"></i>
+                                                                    {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
                                                     </a>
                                                 </div>
                                             @endforeach
-                                    </div>
-                                @else
-                                    <div id="notify-items"
-                                        class="dclose notification-item d-flex justify-content-center">
-                                        <p>Tidak Ada Notifikasi Baru.</p>
-                                    </div>
-                                    @endif
-                                    <hr>
-                                    <div class="d-flex justify-content-center align-items-center">
-                                        <a href="{{ route('notifications') }}"
-                                            class="mb-2 btn btn-outline-secondary dclose"
-                                            id="view-all-notifications">Lihat Semua</a>
+                                        @else
+                                            <div class="py-5 text-center">
+                                                <i class="ti ti-bell-off" style="font-size: 48px; color: #ddd;"></i>
+                                                <p class="mt-2 mb-0 text-muted">Tidak Ada Notifikasi Baru</p>
+                                            </div>
+                                        @endif
                                     </div>
                                     <!-- Notify End -->
+
+                                    <div class="p-3 text-center border-top">
+                                        <a href="{{ route('notifications') }}"
+                                            class="btn btn-sm btn-light-primary text-primary dclose fw-semibold"
+                                            id="view-all-notifications">
+                                            Lihat Semua Notifikasi
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </li>

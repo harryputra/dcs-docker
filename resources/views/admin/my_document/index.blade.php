@@ -8,7 +8,16 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <h2 class="mb-4">Dokumen Anda</h2>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h2 class="mb-2">Dokumen Anda</h2>
+                                <x-breadcrumb :breadcrumbs="[
+                                    ['title' => 'Dokumen', 'url' => '#'],
+                                    ['title' => 'Dokumen Anda', 'url' => route('documents.index')],
+                                ]" />
+                            </div>
+                        </div>
+
                         @can('create-documents')
                             <div class="mb-1 d-flex justify-content-end">
                                 <a href="{{ route('documents.create') }}" class="btn btn-admin d-flex align-items-center">
