@@ -15,7 +15,6 @@ class CategorySeeder extends Seeder
     {
         $categories = [
             ['name' => 'SOP (Standard Operating Procedure)'],
-            ['name' => 'Rekam Medis'],
             ['name' => 'Laporan Bulanan'],
             ['name' => 'Dokumen Pelatihan Staf'],
         ];

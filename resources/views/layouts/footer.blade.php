@@ -44,7 +44,11 @@
             "paging": true,
             "searching": true,
             "ordering": true,
-            "order": orderConfig
+            "order": orderConfig,
+            "columnDefs": [{
+                "orderable": false,
+                "targets": 0 // Disable sorting untuk kolom pertama (checkbox)
+            }]
         });
     });
 </script>
@@ -68,12 +72,12 @@
 </div>
 
 <!-- Toast container -->
-<div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">
-    <div id="flashToast" class="toast align-items-center text-white bg-success border-0" role="alert"
+<div class="top-0 p-3 position-fixed end-0" style="z-index: 1080">
+    <div id="flashToast" class="text-white border-0 toast align-items-center bg-success" role="alert"
         aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
             <div class="toast-body" id="flashToastBody"></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+            <button type="button" class="m-auto btn-close btn-close-white me-2" data-bs-dismiss="toast"
                 aria-label="Close"></button>
         </div>
     </div>

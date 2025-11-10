@@ -28,14 +28,15 @@
                         <table id="myTable" class="table table-hover" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">
+                                    <th style="width: 30px;">
                                         <input type="checkbox" id="selectAll" class="form-check-input">
                                     </th>
-                                    <th>No</th>
+                                    <th style="width: 50px;">No</th>
                                     <th>Name</th>
+                                    <th>Email</th>
                                     <th>Roles</th>
                                     <th>Created</th>
-                                    <th>Actions</th>
+                                    <th style="width: 120px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -54,6 +55,7 @@
                                                 {{ $user->memberName }}
                                             </a>
                                         </td>
+                                        <td>{{ $user->email }}</td>
                                         <td>
                                             <ul class="list-group list-group-flush">
                                                 @foreach ($user->roles as $role)

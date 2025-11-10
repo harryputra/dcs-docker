@@ -34,12 +34,12 @@
                             <table id="myTable" class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th style="width: 50px;">
+                                        <th style="width: 30px;">
                                             <input type="checkbox" id="selectAll" class="form-check-input">
                                         </th>
-                                        <th>No</th>
+                                        <th style="width: 50px;">No</th>
                                         <th>Kategori</th>
-                                        <th>Aksi</th>
+                                        <th style="width: 100px;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
