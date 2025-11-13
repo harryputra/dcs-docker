@@ -135,9 +135,8 @@
                                                 $document->is_active)
                                             <button type="button" id="btn-modalTolak" class="btn btn-approver btn-sm"
                                                 data-bs-toggle="modal" data-bs-target="#modalTolak"
-                                                title="Nonaktifkan Dokumen">
-                                                data-id="{{ $document->currentRevision->id }}">
-                                                Revisi
+                                                data-id="{{ $document->currentRevision->id }}" title="Revisi Dokumen">
+                                                <i class="ti ti-refresh"></i>
                                             </button>
                                             <!-- Modal Revisi-->
                                             <div class="modal fade text-start" id="modalTolak" data-bs-backdrop="static"

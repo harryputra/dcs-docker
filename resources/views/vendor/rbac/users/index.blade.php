@@ -227,7 +227,6 @@
                 const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
 
                 if (checkedBoxes.length === 0) {
-                    alert('Pilih minimal 1 user untuk dihapus');
                     return;
                 }
 

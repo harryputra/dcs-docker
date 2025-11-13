@@ -74,9 +74,17 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
+            $documentCount = $category->documents()->count();
+            $categoryName = $category->name;
+
             $category->delete();
 
-            return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus.');
+            $message = "Kategori '$categoryName' berhasil dihapus.";
+            if ($documentCount > 0) {
+                $message .= " ($documentCount dokumen terkait juga telah dihapus)";
+            }
+
+            return redirect()->route('categories.index')->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus kategori. Silakan coba lagi. Error: ' . $e->getMessage());
         }
@@ -91,11 +99,41 @@ class CategoryController extends Controller
                 return redirect()->back()->with('error', 'Tidak ada kategori yang dipilih.');
             }
 
+            $categories = Category::whereIn('id', $ids)->get();
+            $totalDocuments = $categories->sum(function ($category) {
+                return $category->documents()->count();
+            });
+
             $count = Category::whereIn('id', $ids)->delete();
 
-            return redirect()->route('categories.index')->with('success', "$count kategori berhasil dihapus.");
+            $message = "$count kategori berhasil dihapus.";
+            if ($totalDocuments > 0) {
+                $message .= " ($totalDocuments dokumen terkait juga telah dihapus)";
+            }
+
+            return redirect()->route('categories.index')->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus kategori. Silakan coba lagi. Error: ' . $e->getMessage());
+        }
+    }
+
+    public function countDocuments(Request $request)
+    {
+        try {
+            $ids = json_decode($request->ids);
+
+            if (empty($ids) || !is_array($ids)) {
+                return response()->json(['totalDocuments' => 0]);
+            }
+
+            $categories = Category::whereIn('id', $ids)->get();
+            $totalDocuments = $categories->sum(function ($category) {
+                return $category->documents()->count();
+            });
+
+            return response()->json(['totalDocuments' => $totalDocuments]);
+        } catch (\Exception $e) {
+            return response()->json(['totalDocuments' => 0, 'error' => $e->getMessage()], 500);
         }
     }
 }

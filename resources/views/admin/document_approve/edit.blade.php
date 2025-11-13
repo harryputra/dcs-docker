@@ -87,7 +87,7 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title fw-semibold mb-4 border-bottom">
+                        <h5 class="mb-4 card-title fw-semibold border-bottom">
                             <i class="fa fa-file me-2"></i> Tracking Dokumen
                         </h5>
                         <div class="container">
@@ -95,22 +95,24 @@
                                 <li class="@if (in_array($documentRevision->status, ['Draft', 'Disetujui'])) active @endif">
                                     <span class="icon"><i class="bi bi-archive"></i></i></span>
                                     <span class="fw-semibold">Dokumen Dibuat</span>
-                                    <small>{{$documentRevision->created_at->format('d-m-Y')}}</small>
+                                    <small>{{ $documentRevision->created_at->format('d-m-Y') }}</small>
                                 </li>
                                 <li class="@if ($documentRevision->acc_format) active @endif">
                                     <span class="icon"><i class="bi bi-clipboard-pulse"></i></i></span>
                                     <span class="fw-semibold">Pengecekan Format</span>
-                                    <small>{{empty($documentRevision->accFormat()) ? '-' : $documentRevision->accFormat()->created_at->format('d-m-Y')}}</small>
+                                    <small>{{ empty($documentRevision->accFormat()) ? '-' : $documentRevision->accFormat()->created_at->format('d-m-Y') }}</small>
                                 </li>
                                 <li class="@if ($documentRevision->acc_format && $documentRevision->acc_content) active @endif">
                                     <span class="icon"><i class="bi bi-file-earmark-break"></i></span>
                                     <span class="fw-semibold">Pengecekan Konten</span>
-                                    <small>{{empty($documentRevision->accContent()) ? '-' : $documentRevision->accContent()->created_at->format('d-m-Y')}}</small>
+                                    <small>{{ empty($documentRevision->accContent()) ? '-' : $documentRevision->accContent()->created_at->format('d-m-Y') }}</small>
                                 </li>
-                                <li class="@if (($documentRevision->status == 'Disetujui' && $documentRevision->document->is_active) || $documentRevision->status == 'Expired') active @endif">
+                                <li class="@if (
+                                    ($documentRevision->status == 'Disetujui' && $documentRevision->document->is_active) ||
+                                        $documentRevision->status == 'Expired') active @endif">
                                     <span class="icon"><i class="bi bi-file-earmark-check"></i></span>
                                     <span class="fw-semibold">Dokumen Disetujui</span>
-                                    <small>{{empty($documentRevision->accKepalaPuskesmas()) ? '-' : $documentRevision->accKepalaPuskesmas()->created_at->format('d-m-Y')}}</small>
+                                    <small>{{ empty($documentRevision->accKepalaPuskesmas()) ? '-' : $documentRevision->accKepalaPuskesmas()->created_at->format('d-m-Y') }}</small>
                                 </li>
                             </ul>
                         </div>
@@ -121,10 +123,10 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <h5 class="card-title fw-semibold mb-4">
+                                <h5 class="mb-4 card-title fw-semibold">
                                     <i class="fa fa-file-signature me-2"></i> Tanda Tangan Dokumen
                                 </h5>
-                                <div class="table-responsive mt-4">
+                                <div class="mt-4 table-responsive">
                                     <table class="table table-borderless">
                                         <tbody>
                                             <tr>
@@ -141,7 +143,7 @@
                                             </tr>
                                             <tr>
                                                 <th scope="row">Status</th>
-                                                <td class="badge bg-light text-dark p-2 m-3">
+                                                <td class="p-2 m-3 badge bg-light text-dark">
                                                     {{ $document->currentRevision->latestRevision()->status }}
                                                 </td>
                                             </tr>
@@ -158,43 +160,61 @@
                                     </table>
                                 </div>
                                 @can('view-histories')
-                                    <h5 class="card-title fw-semibold mt-5 mb-4">
-                                        <i class="fa fa-history me-2"></i> Riwayat Revisi
-                                    </h5>
-                                    <div class="table-responsive">
-                                        <table id="revisionTable" class="table table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>No. Revisi</th>
-                                                    <th>Pengunggah</th>
-                                                    <th>Tanggal Revisi</th>
-                                                    <th>Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($document->revisions->sortByDesc('created_at') as $rev)
-                                                    <tr>
-                                                        <td>{{ $rev->revision_number }}</td>
-                                                        <td>{{ $rev->reviser->name }}</td>
-                                                        <td>{{ \Carbon\Carbon::parse($rev->created_at)->format('H:i:s-d/m/Y') }}
-                                                        </td>
-                                                        <td><span
-                                                                class="badge p-2
-                                                @if ($rev->status === 'Disetujui') 
-                                                    bg-admin
+                                    @php
+                                        $reviserRole = $document->uploader->roles->pluck('id');
+                                        $userRoles = auth()->user()->roles->pluck('id');
+
+                                        $rightRole = $reviserRole->intersect($userRoles)->isNotEmpty();
+                                    @endphp
+                                    @if ($rightRole)
+                                        <div class="col-md-12">
+                                            <div class="card">
+                                                <div class="card-body">
+
+                                                    <h5 class="mb-4 card-title fw-semibold">
+                                                        <i class="fa fa-history me-2"></i> Riwayat Revisi
+                                                    </h5>
+
+                                                    <div class="table-responsive">
+                                                        <table id="revisionTable" class="table table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>No. Revisi</th>
+                                                                    <th>Pengunggah</th>
+                                                                    <th>Tanggal Revisi</th>
+                                                                    <th>Status</th>
+                                                                    <th>Berkas</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($document->revisions->sortByDesc('created_at') as $rev)
+                                                                    <tr>
+                                                                        <td>{{ $rev->revision_number }}</td>
+                                                                        <td>{{ $rev->reviser->name }}</td>
+                                                                        <td>{{ \Carbon\Carbon::parse($rev->created_at)->format('H:i:s-d/m/Y') }}
+                                                                        </td>
+                                                                        <td><span
+                                                                                class="badge p-2
+                                                @if ($rev->status === 'Disetujui') bg-admin
                                                 @elseif($rev->status === 'Proses Revisi')
                                                     bg-warning
                                                 @elseif ($rev->status === 'Expired')
-                                                    bg-danger
-                                                @else
-                                                    bg-light text-dark @endif
+                                                    bg-danger @endif
                                                 ">{{ $rev->status }}</span>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                                        </td>
+                                                                        <td>
+                                                                            <a href="{{ route('document_revision.show-file', ['filename' => $rev->file_path]) }}"
+                                                                                target="blank">Download</a>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endcan
                             </div>
                         </div>
@@ -205,10 +225,10 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title fw-semibold mb-4 border-bottom">
+                        <h5 class="mb-4 card-title fw-semibold border-bottom">
                             <i class="fa fa-file me-2"></i> File Dokumen
                         </h5>
-                        <div class="d-flex mb-1">
+                        <div class="mb-1 d-flex">
                             <a href="{{ route('document_revision.show-file', ['filename' => $document->currentRevision->latestRevision()->file_path]) }}"
                                 class="btn btn-admin d-flex align-items-center ms-2" target="blank">
                                 <i class="fa fa-file-alt me-2"></i> Unduh
@@ -219,7 +239,7 @@
                 <!-- Card Ketiga -->
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title fw-semibold mb-4">
+                        <h5 class="mb-4 card-title fw-semibold">
                             <i class="fa fa-file-contract me-2"></i> Dokumen Bertanda Tangan
                         </h5>
                         <form

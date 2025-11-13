@@ -1,4 +1,4 @@
-@extends("layouts.layout_admin")
+@extends('layouts.layout_admin')
 @section('title', __('rbac::permissions.permission_details'))
 @section('content')
 
@@ -7,14 +7,41 @@
             <div class="card">
                 <div class="card-body">
                     <h2 class="mb-3">{!! __('rbac::permissions.permission_details') !!}: {{ $permission->name }}</h2>
-                    <form action="{{ route('delete_permission') }}" method="post">
-                        <a class="btn btn-success" href="{{ route('edit_permission', ['permission' => $permission->id]) }}"
-                            title="{!! __('rbac::main.edit') !!}">{!! __('rbac::permissions.edit_permission') !!}</a>
-                        <input type="submit" class="btn btn-danger" value="{!! __('rbac::permissions.delete_permission') !!}"
-                            title="{!! __('rbac::main.delete') !!}" onclick="return confirm('{!! __('rbac::main.delete_confirm') !!}')">
-                        <input type="hidden" value="{{ $permission->id }}" name="items[]">
-                        <input type="hidden" value="{!! csrf_token() !!}" name="_token">
-                    </form>
+                    <a class="btn btn-success" href="{{ route('edit_permission', ['permission' => $permission->id]) }}"
+                        title="{!! __('rbac::main.edit') !!}">{!! __('rbac::permissions.edit_permission') !!}</a>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#deletePermissionModal">
+                        {!! __('rbac::permissions.delete_permission') !!}
+                    </button>
+
+                    <!-- Modal Hapus Permission -->
+                    <div class="modal fade" id="deletePermissionModal" tabindex="-1"
+                        aria-labelledby="deletePermissionModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title" id="deletePermissionModalLabel">
+                                        <i class="ti ti-alert-triangle me-2"></i>Konfirmasi Hapus
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="mb-0">Apakah Anda yakin ingin menghapus permission
+                                        <strong>{{ $permission->name }}</strong>?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <form action="{{ route('delete_permission') }}" method="post"
+                                        style="display: inline-block;">
+                                        @csrf
+                                        <input type="hidden" value="{{ $permission->id }}" name="items[]">
+                                        <button type="submit" class="btn btn-danger">Hapus</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 
                     <div class="table-responsive">

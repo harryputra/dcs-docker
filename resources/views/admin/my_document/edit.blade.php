@@ -23,7 +23,7 @@
                                     <div class="alert alert-warning" role="alert">
                                         <strong><i class="ti ti-alert-triangle"></i> Peringatan!</strong><br>
                                         Dokumen ini sedang dalam proses approval:
-                                        <ul class="mb-0 mt-2">
+                                        <ul class="mt-2 mb-0">
                                             @if ($documentRevision->acc_format)
                                                 <li>✓ Format telah di-approve oleh Pengendali Dokumen</li>
                                             @endif

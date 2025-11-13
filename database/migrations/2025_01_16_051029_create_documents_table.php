@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('code')->unique();
-            $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
+            $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('cascade');
             $table->foreignId('uploaded_by')->constrained('users')->onDelete('cascade');
             $table->boolean('is_active')->default(false);
             $table->timestamps();

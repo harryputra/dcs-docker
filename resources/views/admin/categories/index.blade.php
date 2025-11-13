@@ -62,18 +62,65 @@
                                                     class="btn btn-sm btn-admin" title="Edit Kategori">
                                                     <i class="ti ti-edit"></i>
                                                 </a>
-                                                <form action="{{ route('categories.destroy', $category) }}" method="POST"
-                                                    style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"
-                                                        title="Hapus Kategori"
-                                                        onclick="return confirm('Apakah Anda yakin ingin menghapus kategori ini?')">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger" title="Hapus Kategori"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteCategoryModal{{ $category->id }}">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
                                             </td>
                                         </tr>
+
+                                        {{-- Modal Delete Category --}}
+                                        <div class="modal fade" id="deleteCategoryModal{{ $category->id }}" tabindex="-1"
+                                            aria-labelledby="deleteCategoryModalLabel{{ $category->id }}"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="text-white modal-header bg-danger">
+                                                        <h5 class="modal-title"
+                                                            id="deleteCategoryModalLabel{{ $category->id }}">
+                                                            <i class="ti ti-alert-triangle"></i> Konfirmasi Hapus Kategori
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white"
+                                                            data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="mb-2">Apakah Anda yakin ingin menghapus kategori
+                                                            <strong>{{ $category->name }}</strong>?
+                                                        </p>
+                                                        @php
+                                                            $docCount = $category->documents()->count();
+                                                        @endphp
+                                                        @if ($docCount > 0)
+                                                            <div class="alert alert-warning mb-2" role="alert">
+                                                                <i class="ti ti-alert-triangle"></i>
+                                                                <strong>Peringatan:</strong> Kategori ini memiliki
+                                                                <strong>{{ $docCount }} dokumen</strong> terkait yang
+                                                                akan ikut terhapus!
+                                                            </div>
+                                                        @endif
+                                                        <p class="mb-0 text-muted">
+                                                            <i class="ti ti-info-circle"></i> Data yang sudah dihapus tidak
+                                                            dapat dikembalikan.
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">
+                                                            <i class="ti ti-x"></i> Batal
+                                                        </button>
+                                                        <form action="{{ route('categories.destroy', $category) }}"
+                                                            method="POST" style="display:inline;">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <i class="ti ti-trash"></i> Hapus
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -90,6 +137,42 @@
         @method('DELETE')
         <input type="hidden" name="ids" id="selectedIds">
     </form>
+
+    {{-- Modal Bulk Delete --}}
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-labelledby="bulkDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="text-white modal-header bg-danger">
+                    <h5 class="modal-title" id="bulkDeleteModalLabel">
+                        <i class="ti ti-alert-triangle"></i> Konfirmasi Hapus Kategori
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Apakah Anda yakin ingin menghapus <strong id="bulkDeleteCount">0</strong> kategori
+                        yang dipilih?</p>
+                    <div id="bulkDocumentWarning" class="alert alert-warning mb-2" style="display: none;"
+                        role="alert">
+                        <i class="ti ti-alert-triangle"></i>
+                        <strong>Peringatan:</strong> Kategori yang dipilih memiliki <strong
+                            id="bulkDocumentCount">0</strong> dokumen terkait yang akan ikut terhapus!
+                    </div>
+                    <p class="mb-0 text-muted">
+                        <i class="ti ti-info-circle"></i> Data yang sudah dihapus tidak dapat dikembalikan.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ti ti-x"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmBulkDelete">
+                        <i class="ti ti-trash"></i> Hapus Semua
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -145,15 +228,48 @@
                 const ids = Array.from(checkedBoxes).map(cb => cb.value);
 
                 if (ids.length === 0) {
-                    alert('Pilih minimal 1 kategori untuk dihapus');
                     return;
                 }
 
-                const confirmMsg = `Apakah Anda yakin ingin menghapus ${ids.length} kategori yang dipilih?`;
-                if (confirm(confirmMsg)) {
-                    selectedIdsInput.value = JSON.stringify(ids);
-                    bulkDeleteForm.submit();
-                }
+                // Update modal dengan jumlah yang dipilih
+                document.getElementById('bulkDeleteCount').textContent = ids.length;
+                selectedIdsInput.value = JSON.stringify(ids);
+
+                // Fetch jumlah dokumen yang akan terhapus via AJAX
+                fetch('{{ route('categories.countDocuments') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            ids: ids
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const warningDiv = document.getElementById('bulkDocumentWarning');
+                        const documentCountSpan = document.getElementById('bulkDocumentCount');
+
+                        if (data.totalDocuments > 0) {
+                            documentCountSpan.textContent = data.totalDocuments;
+                            warningDiv.style.display = 'block';
+                        } else {
+                            warningDiv.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching document count:', error);
+                    });
+
+                // Tampilkan modal
+                const bulkDeleteModal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
+                bulkDeleteModal.show();
+            });
+
+            // Handle konfirmasi dari modal
+            document.getElementById('confirmBulkDelete').addEventListener('click', function() {
+                bulkDeleteForm.submit();
             });
 
             // Initial state

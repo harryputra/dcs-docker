@@ -76,6 +76,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
         Route::delete('/categories-bulk-delete', [CategoryController::class, 'bulkDelete'])->name('categories.bulkDelete');
+        Route::post('/categories-count-documents', [CategoryController::class, 'countDocuments'])->name('categories.countDocuments');
     });
 
 
