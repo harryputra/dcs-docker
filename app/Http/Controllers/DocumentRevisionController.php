@@ -61,6 +61,7 @@ class DocumentRevisionController extends Controller
             'uploader' => $documentRevision->document->uploader->name,
             'status' => $documentRevision->status,
             'url' => route('document_revision.show-file', ['filename' => $documentRevision->file_path]),
+            'view_url' => route('document_revision.view-file', ['filename' => $documentRevision->file_path]),
             'acc_format' => $documentRevision->acc_format,
             'acc_content' => $documentRevision->acc_content,
             'reason' => $reason ?? '',

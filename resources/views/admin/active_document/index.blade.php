@@ -164,7 +164,7 @@
                                                                     </div>
                                                                     <div class="col-md-6">
                                                                         <label for="exampleInputEmail1"
-                                                                            class="form-label">ID
+                                                                            class="form-label">Nomor
                                                                             Dokumen</label>
                                                                         <input type="text" class="form-control"
                                                                             id="rev_code_doc" disabled
@@ -192,14 +192,6 @@
                                                                             <input type="text" class="form-control"
                                                                                 id="rev_uploader_doc" disabled
                                                                                 aria-describedby="emailHelp">
-                                                                        </div>
-                                                                        <div class="col-md-6 d-flex flex-column">
-                                                                            <label for="exampleInputEmail1"
-                                                                                class="form-label">Berkas
-                                                                                Dokumen</label>
-                                                                            <a href="/dokumen/DOC-002.pdf"
-                                                                                id="rev_url_doc"
-                                                                                target="_blank">Download</a>
                                                                         </div>
                                                                     </div>
 

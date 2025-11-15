@@ -59,6 +59,28 @@ class DocumentController extends Controller
         ]);
     }
 
+    public function viewFile($filename)
+    {
+        // Cek apakah file adalah dokumen yang sudah disetujui (Signed)
+        if (str_contains($filename, '_(Signed)')) {
+            if (Storage::disk('dokumen-approved')->exists($filename)) {
+                $fileUrl = Storage::disk('dokumen-approved')->url($filename);
+            } elseif (Storage::disk('dokumen-revision')->exists($filename)) {
+                $fileUrl = Storage::disk('dokumen-revision')->url($filename);
+            } else {
+                abort(404, 'File tidak ditemukan.');
+            }
+        } elseif (Storage::disk('dokumen-revision')->exists($filename)) {
+            $fileUrl = Storage::disk('dokumen-revision')->url($filename);
+        } else {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        return view('admin.documents.viewer', compact('fileUrl', 'extension', 'filename'));
+    }
+
 
     public function getDocByCategory(Request $request)
     {

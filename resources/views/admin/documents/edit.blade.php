@@ -124,8 +124,11 @@
                                     </div>
                                     <div class="mt-2 alert alert-info">
                                         <i class="ti ti-info-circle"></i> Preview menggunakan Google Docs Viewer.
-                                        <a href="{{ $fileUrl }}" download target="_blank"
+                                        <a href="{{ route('document_revision.view-file', ['filename' => $document->currentRevision->file_path]) }}"
                                             class="btn btn-sm btn-admin">
+                                            <i class="ti ti-eye"></i> Lihat File
+                                        </a>
+                                        <a href="{{ $fileUrl }}" download target="_blank" class="btn btn-sm btn-info">
                                             <i class="ti ti-download"></i> Download File
                                         </a>
                                     </div>
@@ -133,8 +136,12 @@
                                     <!-- Non-PDF/DOC file download link -->
                                     <div class="mt-2 alert alert-info">
                                         <i class="ti ti-file"></i> File tidak bisa di-preview.
-                                        <a href="{{ $fileUrl }}" download target="_blank"
+                                        <a href="{{ route('document_revision.view-file', ['filename' => $document->currentRevision->file_path]) }}"
                                             class="btn btn-sm btn-admin">
+                                            <i class="ti ti-eye"></i> Lihat File
+                                        </a>
+                                        <a href="{{ $fileUrl }}" download target="_blank"
+                                            class="btn btn-sm btn-info">
                                             <i class="ti ti-download"></i> Download File
                                         </a>
                                     </div>

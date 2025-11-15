@@ -50,7 +50,7 @@
                                 </div>
                                 <div class="mb-3 row align-items-center">
                                     <div class="col-md-6">
-                                        <label for="exampleInputEmail1" class="form-label">ID Dokumen<span
+                                        <label for="exampleInputEmail1" class="form-label">Nomor Dokumen<span
                                                 class="text-danger">*</span></label>
                                         <input type="text" name="code" value="{{ old('code') ?? '' }}"
                                             class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"

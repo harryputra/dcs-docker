@@ -13,7 +13,7 @@
                             <table id="tableApproval" class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>Nomor Dokumen</th>
                                         <th>Nama</th>
                                         <th>Menggantikan Dokumen</th>
                                         <th>Status</th>
@@ -59,8 +59,17 @@
                                                     {{ $latestDocRevision->status }}
                                                 </span>
                                             </td>
-                                            <td><a href="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
-                                                    target="_blank">Lihat File</a></td>
+                                            <td>
+                                                <a href="{{ route('document_revision.view-file', ['filename' => $latestDocRevision->file_path]) }}"
+                                                    class="btn btn-sm btn-admin" title="Lihat File">
+                                                    <i class="ti ti-eye"></i>
+                                                </a>
+                                                <a href="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
+                                                    class="btn btn-sm btn-info" title="Download File" download
+                                                    target="_blank">
+                                                    <i class="ti ti-download"></i>
+                                                </a>
+                                            </td>
                                             @can('edit-approval')
                                                 @if (
                                                     ($roles->contains('administrator') && $latestDocRevision->acc_format && $latestDocRevision->acc_content) ||
@@ -127,7 +136,7 @@
                                                             class="form-control" aria-describedby="emailHelp">
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label for="exampleInputEmail1" class="form-label">ID
+                                                        <label for="exampleInputEmail1" class="form-label">Nomor
                                                             Dokumen</label>
                                                         <input type="text" class="form-control" id="rev_code_doc"
                                                             disabled aria-describedby="emailHelp">
@@ -152,11 +161,6 @@
                                                                 class="form-label">Pengunggah</label>
                                                             <input type="text" class="form-control" id="rev_uploader_doc"
                                                                 disabled aria-describedby="emailHelp">
-                                                        </div>
-                                                        <div class="col-md-6 d-flex flex-column">
-                                                            <label for="exampleInputEmail1" class="form-label">Berkas
-                                                                Dokumen</label>
-                                                            <a id="rev_url_doc" target="_blank">Download</a>
                                                         </div>
                                                     </div>
 
@@ -202,7 +206,7 @@
                                                             aria-describedby="emailHelp" id="acc_judul_doc" disabled>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label for="exampleInputEmail1" class="form-label">ID
+                                                        <label for="exampleInputEmail1" class="form-label">Nomor
                                                             Dokumen</label>
                                                         <input type="text" class="form-control"
                                                             aria-describedby="emailHelp" id="acc_code_doc" disabled>
@@ -226,11 +230,6 @@
                                                             class="form-label">Pengunggah</label>
                                                         <input type="text" class="form-control" id="acc_uplodeder_doc"
                                                             disabled aria-describedby="emailHelp">
-                                                    </div>
-                                                    <div class="col-md-6 d-flex flex-column">
-                                                        <label class="form-label">Berkas
-                                                            Dokumen</label>
-                                                        <a id="acc_url_doc" target="_blank">Download</a>
                                                     </div>
                                                 </div>
                                                 <div id="reason_container" class="mb-3 row align-items-center"

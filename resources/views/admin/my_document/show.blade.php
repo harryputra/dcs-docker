@@ -113,7 +113,7 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="mb-4 card-title fw-semibold border-bottom">
+                        <h5 class="mb-4 card-title fw-semibold">
                             <i class="fa fa-file me-2"></i> Tracking Dokumen
                         </h5>
                         <div class="container">
@@ -219,7 +219,7 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="mb-4 card-title fw-semibold border-bottom">
+                        <h5 class="mb-4 card-title fw-semibold">
                             <i class="fa fa-file me-2"></i> File Dokumen
                         </h5>
                         <div class="mb-1 d-flex">
@@ -241,11 +241,14 @@
                                     </a>
                                 @endif
                             @endcanany
+                            <a href="{{ route('document_revision.view-file', ['filename' => $documentRevision->latestRevision()->file_path]) }}"
+                                class="btn {{ in_array($documentRevision->latestRevision()->status, ['Disetujui', 'Draft']) ? 'btn-admin' : 'btn-danger' }} d-flex align-items-center ms-2">
+                                <i class="ti ti-eye me-2"></i>
+                                Lihat
+                            </a>
                             <a href="{{ route('document_revision.show-file', ['filename' => $documentRevision->latestRevision()->file_path]) }}"
-                                class="btn {{ in_array($documentRevision->latestRevision()->status, ['Disetujui', 'Draft']) ? 'btn-admin' : 'btn-danger' }} d-flex align-items-center ms-2"
-                                target="blank">
-                                <i
-                                    class="fa {{ in_array($documentRevision->latestRevision()->status, ['Disetujui', 'Draft']) ? 'fa-file-alt' : 'fa-triangle-exclamation' }} me-2"></i>
+                                class="btn btn-info d-flex align-items-center ms-2" download target="_blank">
+                                <i class="ti ti-download me-2"></i>
                                 Unduh
                             </a>
                         </div>
@@ -320,8 +323,15 @@
                                                                 ">{{ $rev->status }}</span>
                                                 </td>
                                                 <td>
+                                                    <a href="{{ route('document_revision.view-file', ['filename' => $rev->file_path]) }}"
+                                                        class="p-2 btn btn-sm btn-admin" title="Lihat File">
+                                                        <i class="ti ti-eye"></i>
+                                                    </a>
                                                     <a href="{{ route('document_revision.show-file', ['filename' => $rev->file_path]) }}"
-                                                        target="blank">Download</a>
+                                                        class="p-2 btn btn-sm btn-info" title="Download File" download
+                                                        target="_blank">
+                                                        <i class="ti ti-download"></i>
+                                                    </a>
                                                 </td>
                                         @endforeach
                                     </tbody>

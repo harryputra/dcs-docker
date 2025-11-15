@@ -257,10 +257,13 @@
                                     </a>
                                 @endif
                             @endcanany
+                            <a href="{{ route('document_revision.view-file', ['filename' => $document->currentRevision->latestRevision($document->id)->file_path]) }}"
+                                class="btn {{ $is_active ? 'btn-admin' : 'btn-danger' }} d-flex align-items-center ms-2">
+                                <i class="ti ti-eye me-2"></i> Lihat
+                            </a>
                             <a href="{{ route('document_revision.show-file', ['filename' => $document->currentRevision->latestRevision($document->id)->file_path]) }}"
-                                class="btn {{ $is_active ? 'btn-admin' : 'btn-danger' }} d-flex align-items-center ms-2"
-                                target="blank">
-                                <i class="fa {{ $is_active ? 'fa-file-alt' : 'fa-triangle-exclamation' }} me-2"></i> Unduh
+                                class="btn btn-info d-flex align-items-center ms-2" download target="_blank">
+                                <i class="ti ti-download me-2"></i> Unduh
                             </a>
                         </div>
                     </div>
@@ -361,8 +364,15 @@
                                                 ">{{ $rev->status }}</span>
                                                     </td>
                                                     <td>
+                                                        <a href="{{ route('document_revision.view-file', ['filename' => $rev->file_path]) }}"
+                                                            class="btn btn-sm btn-admin" title="Lihat File">
+                                                            <i class="ti ti-eye"></i>
+                                                        </a>
                                                         <a href="{{ route('document_revision.show-file', ['filename' => $rev->file_path]) }}"
-                                                            target="blank">Download</a>
+                                                            class="btn btn-sm btn-info" title="Download File" download
+                                                            target="_blank">
+                                                            <i class="ti ti-download"></i>
+                                                        </a>
                                                     </td>
                                                 </tr>
                                             @endforeach
