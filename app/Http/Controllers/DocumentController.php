@@ -303,7 +303,9 @@ class DocumentController extends Controller
                     'performed_by' => Auth::id(),
                     'reason' => null,
                 ]);
-                event(new NewCreatedDocument($document, 'Dokumen "' . $document->title . '" telah dibuat oleh ' . $document->uploader->name));
+                // Load relations sebelum trigger event
+                $document->load(['category', 'uploader']);
+                event(new NewCreatedDocument($document, 'Dokumen "' . $document->title . '" telah dibuat oleh ' . Auth::user()->name));
             } elseif (!empty($validated['noApproval'])) {
                 if ($validated['noApproval']) {
                     DocumentHistory::create([

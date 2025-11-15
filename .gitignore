@@ -64,3 +64,6 @@ storage/logs/*.log
 # Optional backup
 .env.backup
 .env.production
+
+# Test files
+test-whatsapp.php
