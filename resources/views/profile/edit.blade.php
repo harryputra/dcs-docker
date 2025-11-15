@@ -55,13 +55,6 @@
                                     value="{{ auth()->user()->email }}" required>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">Phone (WhatsApp)</label>
-                                <input type="text" id="phone" name="phone" class="form-control"
-                                    value="{{ auth()->user()->phone }}" placeholder="08xxx atau 628xxx">
-                                <small class="text-muted">Format: 08xxx atau 628xxx (untuk notifikasi WhatsApp)</small>
-                            </div>
-
                             <div class="text-center mt-3">
                                 <button type="submit" class="btn btn-admin">
                                     <i class="ti ti-save"></i> Save Changes

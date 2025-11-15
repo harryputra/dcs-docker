@@ -20,12 +20,6 @@
                                 placeholder="Enter email" required>
                         </div>
                         <div class="mb-3">
-                            <label for="phone" class="form-label">Phone (WhatsApp)</label>
-                            <input type="text" name="phone" id="phone" class="form-control"
-                                placeholder="08xxx atau 628xxx">
-                            <small class="text-muted">Format: 08xxx atau 628xxx (untuk notifikasi WhatsApp)</small>
-                        </div>
-                        <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" name="password" id="password" class="form-control"
                                 placeholder="Enter password" required>
@@ -38,14 +32,6 @@
                                     <option value="{{ $role->id }}">{{ $role->name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="receive_all_notifications"
-                                name="receive_all_notifications" value="1">
-                            <label class="form-check-label" for="receive_all_notifications">
-                                Terima semua notifikasi dokumen (khusus Admin)
-                            </label>
                         </div>
 
                         <button type="submit" class="btn btn-admin">Submit</button>

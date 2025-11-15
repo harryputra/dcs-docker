@@ -24,8 +24,6 @@ class User extends Authenticatable implements RbacUserInterface
         'name',
         'email',
         'password',
-        'phone',
-        'receive_all_notifications',
         'roles'
     ];
 

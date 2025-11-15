@@ -25,19 +25,15 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8',
             'role' => 'required|exists:roles,id',
-            'receive_all_notifications' => 'nullable|boolean',
         ]);
 
         // Membuat user baru
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => $request->phone,
             'password' => bcrypt($request->password),
-            'receive_all_notifications' => $request->has('receive_all_notifications') ? true : false,
         ]);
 
         // Menambahkan role ke user

@@ -380,9 +380,10 @@ class DocumentRevisionController extends Controller
                 'file' => 'required_if:status,Disetujui|file|mimes:pdf,doc,docx,ppt,pptx',
             ];
 
-            // Code hanya required untuk Pengendali Dokumen JIKA code masih null (pertama kali approve)
-            if (auth()->user()->isRole('Pengendali-Dokumen') && $documentRevision->document->code === null) {
-                $rules['code'] = 'required|string|unique:documents,code,' . $documentRevision->document->id . '|max:30';
+            // Code tidak perlu required lagi karena akan auto-generate dari klasifikasi
+            // Tapi jika user input manual tetap divalidasi
+            if (auth()->user()->isRole('Pengendali-Dokumen') && $request->has('code')) {
+                $rules['code'] = 'string|unique:documents,code,' . $documentRevision->document->id . '|max:100';
             }
 
             if (auth()->user()->isRole('Administrator')) {
@@ -403,8 +404,8 @@ class DocumentRevisionController extends Controller
 
             $validated = $validator->validate();
 
-            // Update code dokumen TERLEBIH DAHULU jika ada di request, user adalah Pengendali Dokumen, dan code masih null
-            if (isset($validated['code']) && auth()->user()->isRole('Pengendali-Dokumen') && $documentRevision->document->code === null) {
+            // Update code dokumen jika ada input manual dari user (opsional)
+            if (isset($validated['code']) && auth()->user()->isRole('Pengendali-Dokumen')) {
                 $documentRevision->document->update(['code' => $validated['code']]);
 
                 // Rename file dengan code yang baru
@@ -457,7 +458,24 @@ class DocumentRevisionController extends Controller
 
                 $file = $request->file('file');
                 $fileExtension = $file->getClientOriginalExtension();
-                $fileName = str_replace(['/', '\\'], '-', $documentRevision->document->code) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $documentRevision->document->title) . '_(Signed)' . '.' . $fileExtension;
+
+                // Generate kode dokumen otomatis jika belum ada
+                $document = $documentRevision->document;
+                if (!$document->code) {
+                    // Set published_date dulu sebelum generate code
+                    $document->published_date = now()->format('Y-m-d');
+                    $document->save();
+
+                    // Load relasi klasifikasi untuk generate code
+                    $document->load(['classification', 'category']);
+
+                    // Generate kode dokumen lengkap
+                    $generatedCode = $document->generateDocumentCode();
+                    $document->code = $generatedCode;
+                    $document->save();
+                }
+
+                $fileName = str_replace(['/', '\\'], '-', $document->code) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $document->title) . '_(Signed)' . '.' . $fileExtension;
                 Storage::disk('dokumen-approved')->put($fileName, file_get_contents($file));
                 if (Storage::disk('dokumen-revision')->exists($documentRevision->file_path)) {
                     Storage::disk('dokumen-revision')->delete($documentRevision->file_path);

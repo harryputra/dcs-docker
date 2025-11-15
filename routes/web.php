@@ -106,4 +106,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/file/dokumen/{filename}', [DocumentController::class, 'showFile'])->name('document_revision.show-file')->middleware('can:view-documents');
     Route::get('/view/dokumen/{filename}', [DocumentController::class, 'viewFile'])->name('document_revision.view-file')->middleware('can:view-documents');
     Route::get('/documents_category', [DocumentController::class, 'getDocByCategory'])->name('document.getByCategory')->middleware('can:view-documents');
+
+    // Classification API endpoints for cascading dropdowns
+    Route::get('/api/classifications', [DocumentController::class, 'getClassifications'])->name('api.classifications');
+    Route::get('/api/classifications/{parentId}/children', [DocumentController::class, 'getClassificationChildren'])->name('api.classifications.children');
 });

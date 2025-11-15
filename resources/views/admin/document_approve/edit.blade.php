@@ -131,7 +131,16 @@
                                         <tbody>
                                             <tr>
                                                 <th scope="row">Nomor Dokumen</th>
-                                                <td>{{ $document->code }}</td>
+                                                <td>
+                                                    @if ($document->code)
+                                                        {{ $document->code }}
+                                                    @else
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="ti ti-clock"></i> Akan dibuat otomatis saat dokumen
+                                                            disahkan
+                                                        </span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th scope="row">Judul</th>

@@ -200,6 +200,7 @@ class DocumentController extends Controller
             $rules = [
                 'title' => 'required|string|max:255',
                 'category_id' => 'required|exists:categories,id',
+                'classification_id' => 'required|exists:document_classifications,id',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
                 'description' => 'required|string',
                 'created_at' => 'required|date|before_or_equal:today',
@@ -218,10 +219,19 @@ class DocumentController extends Controller
             // Jika dokumen lama, set code dan is_active
             $isOldDoc = !empty($validated['is_old_document']);
 
+            // Generate sequence number untuk dokumen baru (bukan dokumen lama)
+            $sequenceNumber = null;
+            if (!$isOldDoc) {
+                $sequenceNumber = Document::getNextSequenceNumber($validated['classification_id']);
+            }
+
             $docData = [
                 'title' => $validated['title'],
                 'code' => $isOldDoc ? $validated['code'] : null, // Code langsung diisi jika dokumen lama
                 'category_id' => $validated['category_id'],
+                'classification_id' => $validated['classification_id'],
+                'sequence_number' => $sequenceNumber,
+                'puskesmas_code' => 'PKM GRD',
                 'uploaded_by' => Auth::id(),
                 'current_revision_id' => null,
                 'created_at' => $validated['created_at'],
@@ -488,5 +498,33 @@ class DocumentController extends Controller
         event(new DocumentCreatedNotification($document));
 
         return response()->json(['message' => 'Document created successfully']);
+    }
+
+    /**
+     * Get all level 1 classifications
+     */
+    public function getClassifications(Request $request)
+    {
+        $level = $request->get('level', 1);
+
+        $classifications = \App\Models\DocumentClassification::where('level', $level)
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->get(['id', 'code', 'name', 'parent_id']);
+
+        return response()->json($classifications);
+    }
+
+    /**
+     * Get children of a specific classification
+     */
+    public function getClassificationChildren($parentId)
+    {
+        $classifications = \App\Models\DocumentClassification::where('parent_id', $parentId)
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->get(['id', 'code', 'name', 'parent_id', 'level']);
+
+        return response()->json($classifications);
     }
 }

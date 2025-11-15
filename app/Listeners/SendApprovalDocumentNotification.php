@@ -5,21 +5,18 @@ namespace App\Listeners;
 use App\Events\NewApprovalDocument;
 use App\Models\User;
 use App\Notifications\DocumentApprovalNotification;
-use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Notification;
 
 class SendApprovalDocumentNotification
 {
-    protected $whatsappService;
-
     /**
      * Create the event listener.
      */
-    public function __construct(WhatsAppService $whatsappService)
+    public function __construct()
     {
-        $this->whatsappService = $whatsappService;
+        //
     }
 
     /**
@@ -39,12 +36,6 @@ class SendApprovalDocumentNotification
 
         $users = $users->merge($admins);
 
-        // Kirim email notification
         Notification::send($users, new DocumentApprovalNotification($event->document, $event->message, $event->link));
-
-        // Kirim WhatsApp notification
-        foreach ($users as $user) {
-            $this->whatsappService->sendDocumentApprovalNotification($user, $event->document);
-        }
     }
 }

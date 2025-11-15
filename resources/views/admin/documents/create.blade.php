@@ -53,6 +53,29 @@
                             </select>
                         </div>
 
+                        <!-- Klasifikasi Dokumen (Multi-Level Cascading) -->
+                        <div class="mb-6">
+                            <label for="classification_id"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Klasifikasi
+                                Dokumen<span class="text-danger">*</span></label>
+
+                            <!-- Level 1 Dropdown -->
+                            <select id="classification_level_1" class="form-control mb-2" required>
+                                <option value="">-- Pilih Klasifikasi Utama --</option>
+                            </select>
+
+                            <!-- Dynamic Level Dropdowns (will be added via JavaScript) -->
+                            <div id="classification_dropdowns"></div>
+
+                            <!-- Hidden input for final selection -->
+                            <input type="hidden" name="classification_id" id="classification_id" required>
+
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <i class="ti ti-info-circle"></i> Pilih klasifikasi hingga level paling dalam yang tersedia
+                            </p>
+                            <p class="text-xs text-primary mt-1" id="selected_classification_display"></p>
+                        </div>
+
                         <!-- Tanggal Dokumen -->
                         <div class="mb-6">
                             <label for="created_at"
@@ -177,6 +200,153 @@
                 publishedInput.required = false;
                 publishedInput.value = '';
             }
+        });
+
+        // Cascading Dropdown untuk Klasifikasi Dokumen (Multi-Level)
+        document.addEventListener('DOMContentLoaded', function() {
+            const level1Select = document.getElementById('classification_level_1');
+            const dropdownsContainer = document.getElementById('classification_dropdowns');
+            const finalInput = document.getElementById('classification_id');
+            const displayText = document.getElementById('selected_classification_display');
+
+            let currentLevel = 1;
+            let selectedPath = []; // Track full path of selections
+
+            // Load Level 1 Classifications on page load
+            fetch('{{ route('api.classifications') }}?level=1')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(classification => {
+                        const option = new Option(
+                            `${classification.code} - ${classification.name}`,
+                            classification.id
+                        );
+                        option.dataset.code = classification.code;
+                        option.dataset.name = classification.name;
+                        level1Select.add(option);
+                    });
+                })
+                .catch(error => console.error('Error loading classifications:', error));
+
+            // Handle Level 1 change
+            level1Select.addEventListener('change', function() {
+                const selectedId = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+
+                // Clear all lower level dropdowns
+                dropdownsContainer.innerHTML = '';
+                currentLevel = 1;
+                selectedPath = [];
+
+                if (selectedId) {
+                    selectedPath.push({
+                        id: selectedId,
+                        code: selectedOption.dataset.code,
+                        name: selectedOption.dataset.name
+                    });
+
+                    // Load children
+                    loadNextLevel(selectedId, 2);
+                } else {
+                    finalInput.value = '';
+                    displayText.textContent = '';
+                }
+            });
+
+            // Function to load next level dropdown
+            function loadNextLevel(parentId, level) {
+                fetch(`{{ url('/api/classifications') }}/${parentId}/children`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            // Create new dropdown for this level
+                            const newDropdown = document.createElement('select');
+                            newDropdown.className = 'form-control mb-2';
+                            newDropdown.id = `classification_level_${level}`;
+                            newDropdown.dataset.level = level;
+
+                            const defaultOption = document.createElement('option');
+                            defaultOption.value = '';
+                            defaultOption.textContent = `-- Pilih Level ${level} --`;
+                            newDropdown.appendChild(defaultOption);
+
+                            data.forEach(item => {
+                                const option = new Option(
+                                    `${item.code} - ${item.name}`,
+                                    item.id
+                                );
+                                option.dataset.code = item.code;
+                                option.dataset.name = item.name;
+                                newDropdown.add(option);
+                            });
+
+                            dropdownsContainer.appendChild(newDropdown);
+                            currentLevel = level;
+
+                            // Add event listener to new dropdown
+                            newDropdown.addEventListener('change', function() {
+                                handleLevelChange(this, level);
+                            });
+                        } else {
+                            // No children, this is the final level
+                            updateFinalSelection();
+                        }
+                    })
+                    .catch(error => console.error('Error loading children:', error));
+            }
+
+            // Handle change in any level dropdown
+            function handleLevelChange(selectElement, level) {
+                const selectedId = selectElement.value;
+                const selectedOption = selectElement.options[selectElement.selectedIndex];
+
+                // Remove all dropdowns after this level
+                const allDropdowns = dropdownsContainer.querySelectorAll('select');
+                allDropdowns.forEach(dropdown => {
+                    if (parseInt(dropdown.dataset.level) > level) {
+                        dropdown.remove();
+                    }
+                });
+
+                // Trim selectedPath to current level
+                selectedPath = selectedPath.slice(0, level);
+
+                if (selectedId) {
+                    selectedPath.push({
+                        id: selectedId,
+                        code: selectedOption.dataset.code,
+                        name: selectedOption.dataset.name
+                    });
+
+                    // Try to load next level
+                    loadNextLevel(selectedId, level + 1);
+                } else {
+                    updateFinalSelection();
+                }
+            }
+
+            // Update final hidden input and display
+            function updateFinalSelection() {
+                if (selectedPath.length > 0) {
+                    const lastSelected = selectedPath[selectedPath.length - 1];
+                    finalInput.value = lastSelected.id;
+
+                    // Build full code display
+                    const fullCode = selectedPath.map(item => item.code).join('.');
+                    const fullName = selectedPath[selectedPath.length - 1].name;
+                    displayText.innerHTML = `<strong>Terpilih:</strong> ${fullCode} - ${fullName}`;
+                } else {
+                    finalInput.value = '';
+                    displayText.textContent = '';
+                }
+            }
+
+            // Watch for any dropdown change to update final selection
+            document.addEventListener('change', function(e) {
+                if (e.target.matches('[id^="classification_level_"]')) {
+                    updateFinalSelection();
+                }
+            });
         });
     </script>
 

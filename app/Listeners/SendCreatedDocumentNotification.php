@@ -5,21 +5,18 @@ namespace App\Listeners;
 use App\Events\NewCreatedDocument;
 use App\Models\User;
 use App\Notifications\DocumentCreatedNotification;
-use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Notification;
 
 class SendCreatedDocumentNotification
 {
-    protected $whatsappService;
-
     /**
      * Create the event listener.
      */
-    public function __construct(WhatsAppService $whatsappService)
+    public function __construct()
     {
-        $this->whatsappService = $whatsappService;
+        //
     }
 
     /**
@@ -40,11 +37,7 @@ class SendCreatedDocumentNotification
         $users = $users->merge($admins);
 
         foreach ($users as $user) {
-            // Kirim email notification
             Notification::send($user, new DocumentCreatedNotification($event->document, $event->message));
-
-            // Kirim WhatsApp notification
-            $this->whatsappService->sendDocumentCreatedNotification($user, $event->document);
         }
     }
 }
