@@ -30,14 +30,6 @@
                     <form action="{{ route('documents.store') }}" method="POST" class="space-y-6"
                         enctype="multipart/form-data">
                         @csrf
-                        <!-- Nomor Dokumen -->
-                        <div class="mb-6">
-                            <label for="nomor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nomor
-                                Dokumen<span class="text-danger">*</span></label>
-                            <input type="text" name="code" value="{{ old('code') }}" class="form-control"
-                                id="nomor" placeholder="Nomor Dokumen" required />
-                        </div>
-
                         <!-- Judul -->
                         <div class="mb-6">
                             <label for="judul"

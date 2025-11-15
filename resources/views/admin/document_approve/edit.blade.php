@@ -247,28 +247,45 @@
                         </div>
                     </div>
                 </div>
-                <!-- Card Ketiga -->
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="mb-4 card-title fw-semibold">
-                            <i class="fa fa-file-contract me-2"></i> Dokumen Bertanda Tangan
-                        </h5>
-                        <form
-                            action="{{ route('document_approval.update', ['documentRevision' => $documentRevision->id]) }}"
-                            method="post" enctype="multipart/form-data">
-                            @csrf
-                            @method('PUT')
-                            <input type="hidden" name="status" value="Disetujui">
-                            <div class="mb-3">
-                                <input class="form-control" type="file" id="formFile" name="file" required
-                                    accept=".pdf, .docx, .pptx">
+                <!-- Card Ketiga - Upload File Signed (Hanya untuk Pengendali Dokumen setelah Bagian Mutu approve) -->
+                @if (auth()->user()->isRole('Pengendali-Dokumen') && $documentRevision->acc_format && $documentRevision->acc_content)
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-4 card-title fw-semibold">
+                                <i class="fa fa-file-contract me-2"></i> Upload Dokumen Bertanda Tangan
+                            </h5>
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle"></i>
+                                <small>
+                                    <strong>Petunjuk:</strong><br>
+                                    1. Download dokumen<br>
+                                    2. Print dan bawa ke Kepala Puskesmas untuk TTD<br>
+                                    3. Scan dokumen yang sudah di-TTD<br>
+                                    4. Upload file hasil scan di bawah ini
+                                </small>
                             </div>
-                            <div class="d-flex justify-content-center">
-                                <input type="submit" class="btn btn-admin w-100" value="Kirim File & Approve"></input>
-                            </div>
-                        </form>
+                            <form
+                                action="{{ route('document_approval.update', ['documentRevision' => $documentRevision->id]) }}"
+                                method="post" enctype="multipart/form-data">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="status" value="Disetujui">
+                                <div class="mb-3">
+                                    <label class="form-label">File Dokumen yang Sudah di-TTD<span
+                                            class="text-danger">*</span></label>
+                                    <input class="form-control" type="file" id="formFile" name="file" required
+                                        accept=".pdf, .docx, .pptx">
+                                    <small class="text-muted">Format: PDF, DOCX, PPTX</small>
+                                </div>
+                                <div class="d-flex justify-content-center">
+                                    <button type="submit" class="btn btn-admin w-100">
+                                        <i class="ti ti-upload me-2"></i> Upload & Sahkan Dokumen
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>

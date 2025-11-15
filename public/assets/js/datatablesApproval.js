@@ -71,7 +71,28 @@ $(document).ready(function () {
     function populateModal (data) {
         $('#reason_container').css('display', 'none')
         $('#acc_judul_doc').val(data.judul)
-        $('#acc_code_doc').val(data.code)
+
+        // Jika code sudah ada, tampilkan value dan disable field. Jika belum ada, biarkan editable untuk Pengendali Dokumen
+        if (data.code && data.code !== '' && data.code !== null) {
+            $('#acc_code_input').val(data.code)
+            $('#acc_code_input').attr('readonly', true)
+            $('#acc_code_input').attr('disabled', true)
+            $('#acc_code_input').removeAttr('required')
+            $('#acc_code_input').closest('.row').hide() // Sembunyikan field jika code sudah ada
+        } else {
+            $('#acc_code_input').val('')
+            $('#acc_code_input').closest('.row').show() // Tampilkan field jika code belum ada
+            // Hanya enable untuk Pengendali Dokumen
+            if (data.roles.includes('pengendali-dokumen')) {
+                $('#acc_code_input').attr('readonly', false)
+                $('#acc_code_input').attr('disabled', false)
+                $('#acc_code_input').attr('required', true)
+            } else {
+                $('#acc_code_input').attr('readonly', true)
+                $('#acc_code_input').attr('disabled', true)
+            }
+        }
+
         $('#acc_category_doc').val(data.category)
         $('#acc_uplodeder_doc').val(data.uploader)
         $('#acc_url_doc').attr('href', data.url)
@@ -84,7 +105,7 @@ $(document).ready(function () {
         }
 
         $('#rev_judul_doc').val(data.judul)
-        $('#rev_code_doc').val(data.code)
+        $('#rev_code_doc').val(data.code || '-')
         $('#rev_category_doc').val(data.category)
         $('#rev_uploader_doc').val(data.uploader)
         $('#rev_url_doc').attr('href', data.url)

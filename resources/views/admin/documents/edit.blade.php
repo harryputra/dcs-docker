@@ -32,14 +32,6 @@
                     @csrf
                     @method('PUT')
 
-                    <!-- Nomor Dokumen -->
-                    <div class="mb-6">
-                        <label for="code" class="block mb-2 text-sm font-medium text-gray-900">Nomor Dokumen<span
-                                class="text-danger">*</span></label>
-                        <input type="text" name="code" value="{{ old('code', $document->code) }}" class="form-control"
-                            id="code" placeholder="Nomor Dokumen" required />
-                    </div>
-
                     <!-- Judul -->
                     <div class="mb-6">
                         <label for="title" class="block mb-2 text-sm font-medium text-gray-900">Judul<span
@@ -140,8 +132,7 @@
                                             class="btn btn-sm btn-admin">
                                             <i class="ti ti-eye"></i> Lihat File
                                         </a>
-                                        <a href="{{ $fileUrl }}" download target="_blank"
-                                            class="btn btn-sm btn-info">
+                                        <a href="{{ $fileUrl }}" download target="_blank" class="btn btn-sm btn-info">
                                             <i class="ti ti-download"></i> Download File
                                         </a>
                                     </div>

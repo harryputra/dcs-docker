@@ -199,7 +199,6 @@ class DocumentController extends Controller
         try {
             $rules = [
                 'title' => 'required|string|max:255',
-                'code' => 'required|string|unique:documents,code|max:50',
                 'category_id' => 'required|exists:categories,id',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
                 'description' => 'required|string',
@@ -214,7 +213,7 @@ class DocumentController extends Controller
 
             $docData = [
                 'title' => $validated['title'],
-                'code' => $validated['code'],
+                'code' => null, // Code akan diisi oleh Pengendali Dokumen
                 'category_id' => $validated['category_id'],
                 'uploaded_by' => Auth::id(),
                 'current_revision_id' => null,
@@ -223,11 +222,14 @@ class DocumentController extends Controller
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
 
+            // Generate temporary code untuk filename
+            $tempCode = 'TEMP_' . time();
+
             if (!empty($validated['noApproval'])) {
                 $docData['is_active'] = $validated['noApproval'];
-                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+                $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
             } else {
-                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+                $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
             }
 
             Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
@@ -309,7 +311,6 @@ class DocumentController extends Controller
     public function update(Request $request, Document $document)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'file_path' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
@@ -317,9 +318,8 @@ class DocumentController extends Controller
             'noApproval' => 'nullable|boolean',
         ]);
 
-        // Update data dokumen
+        // Update data dokumen (tanpa code)
         $document->update([
-            'code' => $validated['code'],
             'title' => $validated['title'],
             'category_id' => $validated['category_id'],
         ]);

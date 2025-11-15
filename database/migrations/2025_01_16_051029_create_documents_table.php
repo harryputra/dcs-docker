@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('code')->unique();
+            $table->string('code')->unique()->nullable();
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('cascade');
             $table->foreignId('uploaded_by')->constrained('users')->onDelete('cascade');
             $table->boolean('is_active')->default(false);

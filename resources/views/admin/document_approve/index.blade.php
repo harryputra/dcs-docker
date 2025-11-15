@@ -75,9 +75,12 @@
                                                     ($roles->contains('administrator') && $latestDocRevision->acc_format && $latestDocRevision->acc_content) ||
                                                         (($roles->contains('bagian-mutu') && $latestDocRevision->acc_content) ||
                                                             ($roles->contains('bagian-mutu') && !$latestDocRevision->acc_format)) ||
-                                                        ($roles->contains('pengendali-dokumen') && $latestDocRevision->acc_format) ||
+                                                        ($roles->contains('pengendali-dokumen') &&
+                                                            $latestDocRevision->acc_format &&
+                                                            !$latestDocRevision->acc_content) ||
                                                         $latestDocRevision->status !== 'Draft' ||
                                                         ($roles->contains('kepala-puskesmas') && (!$latestDocRevision->acc_format || !$latestDocRevision->acc_content)))
+                                                    {{-- Hanya VIEW (button mata abu-abu) --}}
                                                     <td>
                                                         <button type="button" id="btn-modalTerima"
                                                             class="btn btn-secondary btn-sm" data-bs-toggle="modal"
@@ -87,14 +90,17 @@
                                                         </button>
                                                     </td>
                                                 @else
+                                                    {{-- Ada aksi approve/tolak --}}
                                                     <td>
-                                                        @if (auth()->user()->isRole('kepala-puskesmas') && $latestDocRevision->acc_format && $latestDocRevision->acc_content)
+                                                        @if (auth()->user()->isRole('pengendali-dokumen') && $latestDocRevision->acc_format && $latestDocRevision->acc_content)
+                                                            {{-- Pengendali Dokumen upload file signed (final approval) --}}
                                                             <span style="display: none">z</span>
                                                             <a href="{{ route('document_approval.edit', ['documentRevision' => $latestDocRevision->id]) }}"
                                                                 class="btn btn-admin btn-sm" title="Terima Dokumen">
                                                                 <i class="ti ti-check"></i>
                                                             </a>
                                                         @else
+                                                            {{-- Button approve dengan modal --}}
                                                             <button type="button" id="btn-modalTerima"
                                                                 class="btn btn-admin btn-sm" data-bs-toggle="modal"
                                                                 data-bs-target="#modalTerima"
@@ -200,18 +206,28 @@
                                                     <input type="hidden" name="status" value="Draft">
                                                 @endif
                                                 <div class="mb-3 row align-items-center">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-12">
                                                         <label for="exampleInputEmail1" class="form-label">Judul</label>
                                                         <input type="text" class="form-control"
                                                             aria-describedby="emailHelp" id="acc_judul_doc" disabled>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <label for="exampleInputEmail1" class="form-label">Nomor
-                                                            Dokumen</label>
-                                                        <input type="text" class="form-control"
-                                                            aria-describedby="emailHelp" id="acc_code_doc" disabled>
+                                                </div>
+                                                <div class="mb-3 row align-items-center">
+                                                    <div class="col-md-12">
+                                                        <label for="acc_code_input" class="form-label">Nomor
+                                                            Dokumen<span class="text-danger">*</span></label>
+                                                        <input type="text" class="form-control" name="code"
+                                                            aria-describedby="emailHelp" id="acc_code_input"
+                                                            placeholder="Masukkan nomor dokumen"
+                                                            {{ auth()->user()->isRole('Pengendali-Dokumen') ? '' : 'disabled readonly' }}>
+                                                        <small class="text-muted">
+                                                            @if (auth()->user()->isRole('Pengendali-Dokumen'))
+                                                                Isi nomor dokumen untuk persetujuan (hanya sekali di awal)
+                                                            @else
+                                                                Nomor dokumen hanya dapat diisi oleh Pengendali Dokumen
+                                                            @endif
+                                                        </small>
                                                     </div>
-
                                                 </div>
                                                 <div class="col-md-12">
                                                     <div class="form-group">

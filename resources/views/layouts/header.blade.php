@@ -133,15 +133,17 @@
                             </li>
                         @endcan
                         @can('view-approval')
-                            <li class="sidebar-item">
-                                <a class="sidebar-link @if (Str::contains(request()->url(), 'document_approval')) active @endif"
-                                    href="{{ route('document_approval.index') }}" aria-expanded="false">
-                                    <span>
-                                        <i class="ti ti-checks"></i>
-                                    </span>
-                                    <span class="hide-menu">Pengesahan Dokumen</span>
-                                </a>
-                            </li>
+                            @if (!auth()->user()->isRole('Kepala-Puskesmas'))
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @if (Str::contains(request()->url(), 'document_approval')) active @endif"
+                                        href="{{ route('document_approval.index') }}" aria-expanded="false">
+                                        <span>
+                                            <i class="ti ti-checks"></i>
+                                        </span>
+                                        <span class="hide-menu">Pengesahan Dokumen</span>
+                                    </a>
+                                </li>
+                            @endif
                         @endcan
                         @can('view-histories')
                             <li class="sidebar-item">
@@ -160,7 +162,7 @@
                         </li>
                         <li class="sidebar-item">
                             <a class="sidebar-link" href="javascript:void(0);" aria-expanded="false"
-                                onclick="document.getElementById('logout-form').submit();">
+                                onclick="handleLogout();">
                                 <span>
                                     <i class="ti ti-login"></i>
                                 </span>
@@ -170,6 +172,17 @@
                                 style="display: none;">
                                 @csrf
                             </form>
+                            <script>
+                                function handleLogout() {
+                                    // Refresh CSRF token before submit
+                                    fetch('/sanctum/csrf-cookie').then(() => {
+                                        document.getElementById('logout-form').submit();
+                                    }).catch(() => {
+                                        // Fallback jika gagal refresh token
+                                        document.getElementById('logout-form').submit();
+                                    });
+                                }
+                            </script>
                         </li>
                     </ul>
                 </nav>
@@ -267,7 +280,7 @@
                                             <p class="mb-0 fs-3">My Task</p>
                                         </a>
                                         <a href="javascript:void()" class="btn btn-outline-primary mx-3 mt-2 d-block"
-                                            onclick="document.getElementById('logout-form').submit();">Logout</a>
+                                            onclick="handleLogout();">Logout</a>
                                     </div>
                                 </div>
                             </li>

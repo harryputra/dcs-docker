@@ -84,7 +84,6 @@ class DocumentRevisionController extends Controller
                 'title' => 'required|string|max:255',
                 'category_id' => 'required',
                 'rev' => 'required|array',
-                'code' => 'required|string|unique:documents,code|max:30',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
                 'description' => 'required|string',
                 'reason' => 'required|string|max:255',
@@ -92,12 +91,14 @@ class DocumentRevisionController extends Controller
 
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
-            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+            // Generate temporary code untuk filename
+            $tempCode = 'TEMP_' . time();
+            $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
             Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
 
             $document = Document::create([
                 'title' => $validated['title'],
-                'code' => $validated['code'],
+                'code' => null, // Code akan diisi oleh Pengendali Dokumen
                 'category_id' => $validated['category_id'],
                 'uploaded_by' => Auth::id(),
                 'current_revision_id' => null,
@@ -181,7 +182,7 @@ class DocumentRevisionController extends Controller
 
     public function editApproval(DocumentRevision $documentRevision)
     {
-        if ($documentRevision->status === 'Draft' && $documentRevision->acc_format && $documentRevision->acc_content && auth()->user()->isRole('kepala-puskesmas')) {
+        if ($documentRevision->status === 'Draft' && $documentRevision->acc_format && $documentRevision->acc_content && auth()->user()->isRole('pengendali-dokumen')) {
             $document = $documentRevision->document;
             return view('admin.document_approve.edit', compact('document', 'documentRevision'));
         }
@@ -290,6 +291,11 @@ class DocumentRevisionController extends Controller
                 'file' => 'required_if:status,Disetujui|file|mimes:pdf,doc,docx,ppt,pptx',
             ];
 
+            // Code hanya required untuk Pengendali Dokumen JIKA code masih null (pertama kali approve)
+            if (auth()->user()->isRole('Pengendali-Dokumen') && $documentRevision->document->code === null) {
+                $rules['code'] = 'required|string|unique:documents,code,' . $documentRevision->document->id . '|max:30';
+            }
+
             if (auth()->user()->isRole('Administrator')) {
                 $rules['acc_format'] = 'boolean';
                 $rules['acc_content'] = 'boolean';
@@ -307,6 +313,25 @@ class DocumentRevisionController extends Controller
             });
 
             $validated = $validator->validate();
+
+            // Update code dokumen TERLEBIH DAHULU jika ada di request, user adalah Pengendali Dokumen, dan code masih null
+            if (isset($validated['code']) && auth()->user()->isRole('Pengendali-Dokumen') && $documentRevision->document->code === null) {
+                $documentRevision->document->update(['code' => $validated['code']]);
+
+                // Rename file dengan code yang baru
+                $oldFilePath = $documentRevision->file_path;
+                $fileExtension = pathinfo($oldFilePath, PATHINFO_EXTENSION);
+
+                $newFileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $documentRevision->document->title) . '.' . $fileExtension;
+
+                // Jika ada file lama, rename
+                if (Storage::disk('dokumen-revision')->exists($oldFilePath)) {
+                    $oldContent = Storage::disk('dokumen-revision')->get($oldFilePath);
+                    Storage::disk('dokumen-revision')->put($newFileName, $oldContent);
+                    Storage::disk('dokumen-revision')->delete($oldFilePath);
+                    $documentRevision->update(['file_path' => $newFileName]);
+                }
+            }
 
             $revData = [
                 'status' => $validated['status'],
@@ -326,8 +351,11 @@ class DocumentRevisionController extends Controller
                 default => 'Rejected',
             };
 
-            // Check role kepala puskesmas
-            $disetujuiKepPus = $validated['status'] === 'Disetujui' && auth()->user()->isRole('Kepala-Puskesmas');
+            // Check jika Pengendali Dokumen upload file signed setelah acc_format dan acc_content true
+            $uploadFileSigned = $validated['status'] === 'Disetujui'
+                && auth()->user()->isRole('Pengendali-Dokumen')
+                && $documentRevision->acc_format
+                && $documentRevision->acc_content;
 
             $revisorRoles = $documentRevision->reviser->roles->pluck('id')->toArray();
             $roles = [1];
@@ -336,7 +364,7 @@ class DocumentRevisionController extends Controller
             // Remove duplicates, if needed
             $roles = array_unique($roles);
 
-            if ($disetujuiKepPus) {
+            if ($uploadFileSigned) {
 
                 $file = $request->file('file');
                 $fileExtension = $file->getClientOriginalExtension();
@@ -395,18 +423,25 @@ class DocumentRevisionController extends Controller
             // For Notification
             $message = 'Dokumen ' . $documentRevision->document->title . ' Menunggu Persetujuan.';
             $link = route('document_approval.index');
-            if ($documentRevision->acc_format && !$documentRevision->acc_content) {
+
+            if ($uploadFileSigned) {
+                // Dokumen sudah final disetujui
+                return redirect()->route('document_approval.index')->with('success', 'Dokumen berhasil disetujui dan telah aktif.');
+            } else if ($documentRevision->acc_format && !$documentRevision->acc_content) {
+                // Menunggu approval Bagian Mutu
                 event(new NewApprovalDocument($documentRevision->document, [1, 3], $message, $link));
             } else if (!$documentRevision->acc_format && $documentRevision->acc_content) {
+                // Menunggu approval Pengendali Dokumen
                 event(new NewApprovalDocument($documentRevision->document, [1, 2], $message, $link));
             } else if ($documentRevision->acc_format && $documentRevision->acc_content && $validated['status'] !== 'Disetujui') {
-                event(new NewApprovalDocument($documentRevision->document, [4], $message, $link));
-            } else if (!$disetujuiKepPus) {
+                // Kedua approval sudah true, menunggu upload file signed dari Pengendali Dokumen
+                event(new NewApprovalDocument($documentRevision->document, [2], $message, $link));
+            } else if ($validated['status'] === 'Pengajuan Revisi') {
+                // Dokumen ditolak, perlu revisi
                 $message = 'Dokumen ' . $documentRevision->document->title . ' Membutuhkan Revisi.';
                 $link = route('document_revision.edit', ['documentRevision' => $documentRevision->id]);
                 event(new NewApprovalDocument($documentRevision->document, $roles, $message, $link));
             }
-
 
             return redirect()->route('document_approval.index')->with('success', 'Status dokumen berhasil diperbarui.');
         } catch (\Exception $e) {
