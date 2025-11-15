@@ -24,6 +24,8 @@ class User extends Authenticatable implements RbacUserInterface
         'name',
         'email',
         'password',
+        'phone',
+        'receive_all_notifications',
         'roles'
     ];
 
@@ -50,7 +52,7 @@ class User extends Authenticatable implements RbacUserInterface
         ];
     }
 
-  /**
+    /**
      * Periksa apakah pengguna memiliki peran tertentu.
      *
      * @param string $role
@@ -61,5 +63,4 @@ class User extends Authenticatable implements RbacUserInterface
         $roles = is_array($roles) ? $roles : [$roles];
         return $this->roles()->whereIn('slug', $roles)->exists();
     }
-
 }

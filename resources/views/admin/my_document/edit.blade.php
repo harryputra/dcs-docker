@@ -13,8 +13,8 @@
                 @method('PUT')
 
                 <div class="row d-flex">
-                    <!-- Card Utama Kiri -->
-                    <div class="col-md-8">
+                    <!-- Card Utama -->
+                    <div class="col-md-12">
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="mb-4 card-title fw-semibold">Revisi Dokumen</h5>
@@ -103,28 +103,6 @@
                                                 title="Dokumen sedang dalam proses approval atau sudah disetujui" @endif>
                                             Submit
                                         </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Card Status Kecil Kanan -->
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="mb-4 card-title fw-semibold">Status Dokumen</h5>
-                                <div class="col-md-12">
-                                    <div class="container">
-                                        <div class="d-flex flex-column">
-                                            <div class="p-2 fw-bolder" style=" background-color: #343a4012;padding: 15px;">
-                                                Mengubah:
-                                            </div>
-                                            <div class="p-2">
-                                                <select id="my-select" name="rev[]" multiple="multiple"
-                                                    class="form-control">
-                                                </select>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

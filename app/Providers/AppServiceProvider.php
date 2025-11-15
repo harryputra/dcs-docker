@@ -29,5 +29,7 @@ class AppServiceProvider extends ServiceProvider
         // }
         Event::listen(SendNewUserNotification::class);
         Event::listen(SendCreatedDocumentNotification::class);
+        Event::listen(\App\Listeners\SendStatusUpdateNotification::class);
+        Event::listen(\App\Listeners\SendOldDocumentNotification::class);
     }
 }

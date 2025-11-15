@@ -52,6 +52,66 @@
                                 @endforeach
                             </select>
                         </div>
+
+                        <!-- Tanggal Dokumen -->
+                        <div class="mb-6">
+                            <label for="created_at"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tanggal Dokumen<span
+                                    class="text-danger">*</span></label>
+                            <input type="date" name="created_at" value="{{ old('created_at', date('Y-m-d')) }}"
+                                class="form-control" id="created_at" max="{{ date('Y-m-d') }}" required />
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Tanggal dokumen dibuat (maksimal hari ini)
+                            </p>
+                        </div>
+
+                        <!-- Checkbox Dokumen Lama -->
+                        <div class="mb-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_old_document" name="is_old_document"
+                                    value="1">
+                                <label class="form-check-label" for="is_old_document">
+                                    <strong>Dokumen lama yang sudah disahkan?</strong>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Centang jika dokumen ini sudah
+                                        disahkan sebelumnya (otomatis disetujui tanpa approval)</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Nomor Dokumen (Hidden by default) -->
+                        <div class="mb-6" id="code_field" style="display: none;">
+                            <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nomor
+                                Dokumen<span class="text-danger">*</span></label>
+                            <input type="text" name="code" id="code" class="form-control"
+                                value="{{ old('code') }}" placeholder="Contoh: SOP/001/2024" />
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Nomor dokumen yang sudah disahkan</p>
+                        </div>
+
+                        <!-- Tanggal Terbit (Hidden by default) -->
+                        <div class="mb-6" id="published_date_field" style="display: none;">
+                            <label for="published_date"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tanggal Terbit<span
+                                    class="text-danger">*</span></label>
+                            <input type="date" name="published_date" value="{{ old('published_date') }}"
+                                class="form-control" id="published_date" max="{{ date('Y-m-d') }}" />
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Tanggal dokumen disahkan (untuk dokumen
+                                lama)</p>
+                        </div>
+
+                        <script>
+                            document.getElementById('is_old_document').addEventListener('change', function() {
+                                const publishedField = document.getElementById('published_date_field');
+                                const publishedInput = document.getElementById('published_date');
+                                if (this.checked) {
+                                    publishedField.style.display = 'block';
+                                    publishedInput.required = true;
+                                } else {
+                                    publishedField.style.display = 'none';
+                                    publishedInput.required = false;
+                                    publishedInput.value = '';
+                                }
+                            });
+                        </script>
+
                         <!-- Deskripsi -->
                         <div>
                             <label for="description" class="block text-sm font-medium text-gray-700">Deskripsi<span
@@ -97,5 +157,27 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('is_old_document').addEventListener('change', function() {
+            const codeField = document.getElementById('code_field');
+            const codeInput = document.getElementById('code');
+            const publishedField = document.getElementById('published_date_field');
+            const publishedInput = document.getElementById('published_date');
+            if (this.checked) {
+                codeField.style.display = 'block';
+                codeInput.required = true;
+                publishedField.style.display = 'block';
+                publishedInput.required = true;
+            } else {
+                codeField.style.display = 'none';
+                codeInput.required = false;
+                codeInput.value = '';
+                publishedField.style.display = 'none';
+                publishedInput.required = false;
+                publishedInput.value = '';
+            }
+        });
+    </script>
 
 @endsection

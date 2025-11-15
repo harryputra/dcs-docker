@@ -16,6 +16,7 @@ class Document extends Model
         'uploaded_by',
         'is_active',
         'current_revision_id',
+        'published_date',
     ];
 
     public function revisions()
@@ -38,11 +39,13 @@ class Document extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
-    public function category() : BelongsTo {
+    public function category(): BelongsTo
+    {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function histories() : HasMany {
+    public function histories(): HasMany
+    {
         return $this->hasMany(DocumentHistory::class);
     }
 
@@ -50,5 +53,4 @@ class Document extends Model
     {
         return $this->hasOne(DocumentHistory::class)->latestOfMany();
     }
-
 }

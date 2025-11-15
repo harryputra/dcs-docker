@@ -50,6 +50,68 @@
                                 </div>
                                 <div class="mb-3 row align-items-center">
                                     <div class="col-md-12">
+                                        <label for="created_at" class="form-label">Tanggal Dokumen<span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" name="created_at"
+                                            value="{{ old('created_at', date('Y-m-d')) }}" class="form-control"
+                                            id="created_at" max="{{ date('Y-m-d') }}" required>
+                                        <small class="text-muted">Tanggal dokumen dibuat (maksimal hari ini)</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row align-items-center">
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="is_old_document"
+                                                name="is_old_document" value="1">
+                                            <label class="form-check-label" for="is_old_document">
+                                                <strong>Dokumen lama yang sudah disahkan?</strong>
+                                                <small class="text-muted d-block">Centang jika dokumen ini sudah disahkan
+                                                    sebelumnya (otomatis disetujui tanpa approval)</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row align-items-center" id="code_field" style="display: none;">
+                                    <div class="col-md-12">
+                                        <label for="code" class="form-label">Nomor Dokumen<span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="code" id="code" class="form-control"
+                                            value="{{ old('code') }}" placeholder="Contoh: SOP/001/2024">
+                                        <small class="text-muted">Nomor dokumen yang sudah disahkan</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3 row align-items-center" id="published_date_field" style="display: none;">
+                                    <div class="col-md-12">
+                                        <label for="published_date" class="form-label">Tanggal Terbit<span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" name="published_date" value="{{ old('published_date') }}"
+                                            class="form-control" id="published_date" max="{{ date('Y-m-d') }}">
+                                        <small class="text-muted">Tanggal dokumen disahkan (untuk dokumen lama)</small>
+                                    </div>
+                                </div>
+                                <script>
+                                    document.getElementById('is_old_document').addEventListener('change', function() {
+                                        const codeField = document.getElementById('code_field');
+                                        const codeInput = document.getElementById('code');
+                                        const publishedField = document.getElementById('published_date_field');
+                                        const publishedInput = document.getElementById('published_date');
+                                        if (this.checked) {
+                                            codeField.style.display = 'block';
+                                            codeInput.required = true;
+                                            publishedField.style.display = 'block';
+                                            publishedInput.required = true;
+                                        } else {
+                                            codeField.style.display = 'none';
+                                            codeInput.required = false;
+                                            codeInput.value = '';
+                                            publishedField.style.display = 'none';
+                                            publishedInput.required = false;
+                                            publishedInput.value = '';
+                                        }
+                                    });
+                                </script>
+                                <div class="mb-3 row align-items-center">
+                                    <div class="col-md-12">
                                         <label for="dokumen" class="form-label">Berkas Dokumen<span
                                                 class="text-danger">*</span></label>
                                         <input type="file" name="file_path" class="form-control" id="dokumen"
@@ -82,7 +144,8 @@
                                 <div class="col-md-12">
                                     <div class="container">
                                         <div class="d-flex flex-column">
-                                            <div class="p-2 fw-bolder" style=" background-color: #343a4012;padding: 15px;">
+                                            <div class="p-2 fw-bolder"
+                                                style=" background-color: #343a4012;padding: 15px;">
                                                 Mengubah:
                                             </div>
                                             <div class="p-2">

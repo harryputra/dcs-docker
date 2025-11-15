@@ -7,9 +7,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class DocumentCreatedNotification extends Notification
+class OldDocumentNotification extends Notification
 {
     use Queueable;
+
     private $document;
     private $message;
 
@@ -40,9 +41,8 @@ class DocumentCreatedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => '📝 ' . $this->message,
-            'link' => route('document_approval.index', ['highlight' => $this->document->id]),
-            'document_id' => $this->document->id
+            'message' => $this->message,
+            'link' => route('documents.show', ['document' => $this->document->id])
         ];
     }
 }

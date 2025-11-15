@@ -18,7 +18,7 @@ class DocumentApprovalNotification extends Notification
      * Create a new notification instance.
      * @return void
      */
-    public function __construct($document,$message,$link)
+    public function __construct($document, $message, $link)
     {
         $this->document = $document;
         $this->message = $message;
@@ -44,7 +44,8 @@ class DocumentApprovalNotification extends Notification
     {
         return [
             'message' => $this->message,
-            'link' => $this->link
+            'link' => $this->link,
+            'document_id' => $this->document->id
         ];
     }
 }

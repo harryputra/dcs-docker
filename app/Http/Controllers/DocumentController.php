@@ -202,6 +202,10 @@ class DocumentController extends Controller
                 'category_id' => 'required|exists:categories,id',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
                 'description' => 'required|string',
+                'created_at' => 'required|date|before_or_equal:today',
+                'is_old_document' => 'nullable|boolean',
+                'code' => 'nullable|required_if:is_old_document,1|string|max:255',
+                'published_date' => 'nullable|required_if:is_old_document,1|date|before_or_equal:today',
             ];
 
             if (auth()->user()->isRole('Administrator')) {
@@ -211,29 +215,47 @@ class DocumentController extends Controller
             $validated = $request->validate($rules);
 
 
+            // Jika dokumen lama, set code dan is_active
+            $isOldDoc = !empty($validated['is_old_document']);
+
             $docData = [
                 'title' => $validated['title'],
-                'code' => null, // Code akan diisi oleh Pengendali Dokumen
+                'code' => $isOldDoc ? $validated['code'] : null, // Code langsung diisi jika dokumen lama
                 'category_id' => $validated['category_id'],
                 'uploaded_by' => Auth::id(),
                 'current_revision_id' => null,
+                'created_at' => $validated['created_at'],
+                'published_date' => $validated['published_date'] ?? null, // Set jika dokumen lama
+                'is_active' => $isOldDoc ? 1 : 0, // Auto-aktif jika dokumen lama
             ];
 
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
 
-            // Generate temporary code untuk filename
-            $tempCode = 'TEMP_' . time();
-
-            if (!empty($validated['noApproval'])) {
+            // Generate filename sesuai tipe dokumen
+            if ($isOldDoc) {
+                // Dokumen lama: gunakan code yang sudah disahkan dan berakhiran (Signed)
+                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+                // Simpan langsung ke dokumen-approved karena sudah disahkan
+                Storage::disk('dokumen-approved')->put($fileName, file_get_contents($file));
+            } elseif (!empty($validated['noApproval'])) {
+                // Admin tanpa approval: gunakan TEMP dan berakhiran (Signed)
                 $docData['is_active'] = $validated['noApproval'];
+                $tempCode = 'TEMP_' . time();
                 $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+                // Simpan ke dokumen-revision
+                Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
             } else {
+                // Dokumen baru biasa: gunakan TEMP
+                $tempCode = 'TEMP_' . time();
                 $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+                // Simpan ke dokumen-revision untuk proses approval
+                Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
             }
 
-            Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
             $document = Document::create($docData);
+
+            // Untuk dokumen lama, JANGAN ubah created_at document (biar tetap tanggal upload)
 
             $revDocData = [
                 'document_id' => $document->id,
@@ -243,13 +265,21 @@ class DocumentController extends Controller
                 'description' => $validated['description'],
             ];
 
+            // Auto-approve jika noApproval atau dokumen lama
             if (!empty($validated['noApproval'])) {
                 $revDocData['status'] = $validated['noApproval'] == true ? 'Disetujui' : 'Draft';
                 $revDocData['acc_format'] = $validated['noApproval'] == true ? 1 : 0;
                 $revDocData['acc_content'] = $validated['noApproval'] == true ? 1 : 0;
+            } elseif ($isOldDoc) {
+                $revDocData['status'] = 'Disetujui';
+                $revDocData['acc_format'] = 1;
+                $revDocData['acc_content'] = 1;
             }
 
             $revision = DocumentRevision::create($revDocData);
+
+            // Untuk dokumen lama, JANGAN ubah created_at revision (biar tetap tanggal upload)
+            // History approval yang pakai published_date
 
             foreach ($validated['rev'] ?? [] as $rev) {
                 $currentRevision = DocumentRevision::findOrFail($rev);
@@ -265,7 +295,7 @@ class DocumentController extends Controller
 
             $document->update(['current_revision_id' => $revision->id]);
 
-            if (empty($validated['noApproval'])) {
+            if (empty($validated['noApproval']) && !$isOldDoc) {
                 DocumentHistory::create([
                     'document_id' => $document->id,
                     'revision_id' => $revision->id,
@@ -273,8 +303,8 @@ class DocumentController extends Controller
                     'performed_by' => Auth::id(),
                     'reason' => null,
                 ]);
-                event(new NewCreatedDocument($document, 'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
-            } else {
+                event(new NewCreatedDocument($document, 'Dokumen "' . $document->title . '" telah dibuat oleh ' . $document->uploader->name));
+            } elseif (!empty($validated['noApproval'])) {
                 if ($validated['noApproval']) {
                     DocumentHistory::create([
                         'document_id' => $document->id,
@@ -284,6 +314,59 @@ class DocumentController extends Controller
                         'reason' => null,
                     ]);
                 }
+            } elseif ($isOldDoc) {
+                // Dokumen lama: kirim notif ke admin untuk monitoring
+                event(new \App\Events\OldDocumentUploaded($document, 'Dokumen lama "' . $document->title . '" berhasil diinput dan aktif (Nomor: ' . $document->code . ')'));
+
+                // Jika dokumen lama, buat history untuk semua step approval
+                // Step 1: Created - pakai created_at (tanggal upload)
+                DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Created',
+                    'performed_by' => Auth::id(),
+                    'reason' => null,
+                ]);
+                // History 'Created' tetap pakai created_at (otomatis dari timestamps)
+
+                // Step 2: Pengecekan Format (Pengendali Dokumen) - pakai published_date
+                $historyFormat = DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => 'Auto-approved Format (dokumen lama yang sudah disahkan)',
+                ]);
+                $historyFormat->timestamps = false;
+                $historyFormat->created_at = $validated['published_date'];
+                $historyFormat->updated_at = $validated['published_date'];
+                $historyFormat->save();
+
+                // Step 3: Pengecekan Konten (Bagian Mutu) - pakai published_date
+                $historyContent = DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => 'Auto-approved Content (dokumen lama yang sudah disahkan)',
+                ]);
+                $historyContent->timestamps = false;
+                $historyContent->created_at = $validated['published_date'];
+                $historyContent->updated_at = $validated['published_date'];
+                $historyContent->save();
+
+                // Step 4: Pengesahan (Upload signed file) - pakai published_date
+                $historyApproved = DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => 'Auto-approved Final (dokumen lama yang sudah disahkan)',
+                ]);
+                $historyApproved->timestamps = false;
+                $historyApproved->created_at = $validated['published_date'];
+                $historyApproved->updated_at = $validated['published_date'];
+                $historyApproved->save();
             }
 
             // return redirect()->route('documents.index')->with('success', 'Document created successfully.');

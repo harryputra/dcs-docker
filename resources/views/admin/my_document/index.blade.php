@@ -61,14 +61,15 @@
                                         <th>Kategori</th>
                                         <th>Status</th>
                                         <th>Uploader</th>
-                                        <th>Created At</th>
+                                        <th>Tanggal Upload</th>
+                                        <th>Tanggal Terbit</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($documents as $document)
                                         <tr>
-                                            <td>{{ $document->code }}</td>
+                                            <td>{{ $document->code ?? '-' }}</td>
                                             <td>{{ $document->title }}</td>
                                             <td>{{ $document->category->name }}</td>
                                             <td>
@@ -92,7 +93,9 @@
                                                 </span>
                                             </td>
                                             <td>{{ $document->uploader->name }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($document->created_at)->format('d/m/Y-H:i:s') }}
+                                            <td>{{ $document->created_at ? \Carbon\Carbon::parse($document->created_at)->format('d/m/Y') : '-' }}
+                                            </td>
+                                            <td>{{ $document->published_date ? \Carbon\Carbon::parse($document->published_date)->format('d/m/Y') : '-' }}
                                             </td>
                                             <td>
                                                 @php

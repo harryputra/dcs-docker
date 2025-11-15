@@ -24,11 +24,20 @@ class SendCreatedDocumentNotification
      */
     public function handle(NewCreatedDocument $event): void
     {
+        // Kirim ke Pengendali Dokumen
         $users = User::whereHas('roles', function ($query) {
-            $query->whereIn('id', [1,2]);
+            $query->where('id', 2); // Pengendali Dokumen
         })->get();
-        foreach($users as $user){
-            Notification::send($user, new DocumentCreatedNotification($event->document,$event->message));
+
+        // Tambahkan Admin yang mau terima semua notif
+        $admins = User::whereHas('roles', function ($query) {
+            $query->where('id', 1); // Administrator
+        })->where('receive_all_notifications', true)->get();
+
+        $users = $users->merge($admins);
+
+        foreach ($users as $user) {
+            Notification::send($user, new DocumentCreatedNotification($event->document, $event->message));
         }
     }
 }

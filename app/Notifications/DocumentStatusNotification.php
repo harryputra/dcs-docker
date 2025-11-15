@@ -7,19 +7,22 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class DocumentCreatedNotification extends Notification
+class DocumentStatusNotification extends Notification
 {
     use Queueable;
+
     private $document;
     private $message;
+    private $status;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($document, $message)
+    public function __construct($document, $message, $status)
     {
         $this->document = $document;
         $this->message = $message;
+        $this->status = $status;
     }
 
     /**
@@ -40,9 +43,9 @@ class DocumentCreatedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => '📝 ' . $this->message,
-            'link' => route('document_approval.index', ['highlight' => $this->document->id]),
-            'document_id' => $this->document->id
+            'message' => $this->message,
+            'status' => $this->status,
+            'link' => route('document_revision.index')
         ];
     }
 }

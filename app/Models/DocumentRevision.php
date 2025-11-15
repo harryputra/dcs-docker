@@ -25,63 +25,103 @@ class DocumentRevision extends Model
         'revised_doc' => 'array',
     ];
 
-    public function document() : BelongsTo{
-        return $this->belongsTo(Document::class,'document_id');
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(Document::class, 'document_id');
     }
 
-    public function revisedDocument() {
+    public function revisedDocument()
+    {
         $documentIds = $this->revised_doc ?? [];
         return Document::whereIn('id', $documentIds)->get();
     }
 
-    public function latestRevision($id = null){
-        if($id != null){
+    public function latestRevision($id = null)
+    {
+        if ($id != null) {
             return $this->where('document_id', $id)
                 ->orderBy('revision_number', 'desc')
                 ->first();
         }
         return $this->where('document_id', $this->document->id)
-        ->orderBy('revision_number', 'desc')
-        ->first();
+            ->orderBy('revision_number', 'desc')
+            ->first();
     }
 
-    public function histories() : HasMany{
-        return $this->hasMany(DocumentHistory::class,'revision_id');
+    public function histories(): HasMany
+    {
+        return $this->hasMany(DocumentHistory::class, 'revision_id');
     }
 
-    public function accFormat(){
+    public function accFormat()
+    {
+        // Untuk dokumen lama yang auto-approved, cari berdasarkan reason
+        $oldDocHistory = $this->histories()
+            ->where('action', 'Approved')
+            ->where('reason', 'like', 'Auto-approved Format%')
+            ->first();
+
+        if ($oldDocHistory) {
+            return $oldDocHistory;
+        }
+
+        // Untuk dokumen biasa, cari berdasarkan role
         $history = $this->histories()->whereHas('performer.roles', function ($query) {
-            $query->whereIn('name', ['Pengendali Dokumen','Administrator'])->where('action','Approved');
-        })->first();
+            $query->whereIn('name', ['Pengendali Dokumen', 'Administrator']);
+        })->where('action', 'Approved')->first();
 
         if ($history && $history->revision->acc_format) {
             return $history;
         }
-    
+
         return null;
     }
 
-    public function accContent(){
+    public function accContent()
+    {
+        // Untuk dokumen lama yang auto-approved, cari berdasarkan reason
+        $oldDocHistory = $this->histories()
+            ->where('action', 'Approved')
+            ->where('reason', 'like', 'Auto-approved Content%')
+            ->first();
+
+        if ($oldDocHistory) {
+            return $oldDocHistory;
+        }
+
+        // Untuk dokumen biasa, cari berdasarkan role
         $history = $this->histories()->whereHas('performer.roles', function ($query) {
-            $query->whereIn('name', ['Bagian Mutu','Administrator'])->where('action','Approved');
-        })->first();
+            $query->whereIn('name', ['Bagian Mutu', 'Administrator']);
+        })->where('action', 'Approved')->first();
 
         if ($history && $history->revision->acc_content) {
             return $history;
         }
-    
+
         return null;
     }
 
-    public function accKepalaPuskesmas(){
+    public function accKepalaPuskesmas()
+    {
+        // Untuk dokumen lama yang auto-approved, cari berdasarkan reason
+        $oldDocHistory = $this->histories()
+            ->where('action', 'Approved')
+            ->where('reason', 'like', 'Auto-approved Final%')
+            ->first();
+
+        if ($oldDocHistory) {
+            return $oldDocHistory;
+        }
+
+        // Untuk dokumen biasa, cari berdasarkan role
         $history = $this->histories()->whereHas('performer.roles', function ($query) {
-            $query->whereIn('name', ['Kepala Puskesmas','Administrator'])->where('action','Approved');
-        })->first();
+            $query->whereIn('name', ['Kepala Puskesmas', 'Administrator']);
+        })->where('action', 'Approved')->first();
 
         if ($history && $history->revision->acc_format && $history->revision->acc_content && ($history->document->is_active || $history->revision->latestRevision($history->document_id)->status === 'Expired')) {
             return $history;
         }
-    
+
         return null;
     }
 
@@ -90,7 +130,8 @@ class DocumentRevision extends Model
         return $this->belongsTo(User::class, 'revised_by');
     }
 
-    public function checkUploaderRoles(){
+    public function checkUploaderRoles()
+    {
         $reviserRole = $this->reviser->roles->pluck('id');
         $userRoles = auth()->user()->roles->pluck('id');
 

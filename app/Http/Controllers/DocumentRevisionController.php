@@ -87,31 +87,65 @@ class DocumentRevisionController extends Controller
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
                 'description' => 'required|string',
                 'reason' => 'required|string|max:255',
+                'created_at' => 'required|date|before_or_equal:today',
+                'is_old_document' => 'nullable|boolean',
+                'code' => 'nullable|required_if:is_old_document,1|string|max:255',
+                'published_date' => 'nullable|required_if:is_old_document,1|date|before_or_equal:today',
             ]);
 
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
-            // Generate temporary code untuk filename
-            $tempCode = 'TEMP_' . time();
-            $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
-            Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
+
+            // Jika dokumen lama, langsung set code dan is_active
+            $isOldDoc = !empty($validated['is_old_document']);
+
+            // Generate filename sesuai tipe dokumen
+            if ($isOldDoc) {
+                // Dokumen lama: gunakan code yang sudah disahkan dan berakhiran (Signed)
+                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+                // Simpan langsung ke dokumen-approved karena sudah disahkan
+                Storage::disk('dokumen-approved')->put($fileName, file_get_contents($file));
+            } else {
+                // Dokumen baru: gunakan TEMP untuk sementara
+                $tempCode = 'TEMP_' . time();
+                $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+                // Simpan ke dokumen-revision untuk proses approval
+                Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
+            }
 
             $document = Document::create([
                 'title' => $validated['title'],
-                'code' => null, // Code akan diisi oleh Pengendali Dokumen
+                'code' => $isOldDoc ? $validated['code'] : null, // Code langsung diisi jika dokumen lama
                 'category_id' => $validated['category_id'],
                 'uploaded_by' => Auth::id(),
                 'current_revision_id' => null,
+                'created_at' => $validated['created_at'], // Tanggal dokumen dibuat (upload)
+                'published_date' => $validated['published_date'] ?? null, // Set jika dokumen lama
+                'is_active' => $isOldDoc ? 1 : 0, // Auto-aktif jika dokumen lama
             ]);
 
-            $revision = DocumentRevision::create([
+            // Untuk dokumen lama, JANGAN ubah created_at document (biar tetap tanggal upload)
+
+            $revisionData = [
                 'document_id' => $document->id,
                 'file_path' => $fileName,
                 'revised_by' => Auth::id(),
                 'revision_number' => 1,
                 'description' => $validated['description'],
                 'revised_doc' => $validated['rev']
-            ]);
+            ];
+
+            // Jika dokumen lama, auto-approve (melewati alur approval)
+            if ($isOldDoc) {
+                $revisionData['status'] = 'Disetujui';
+                $revisionData['acc_format'] = 1;
+                $revisionData['acc_content'] = 1;
+            }
+
+            $revision = DocumentRevision::create($revisionData);
+
+            // Untuk dokumen lama, JANGAN ubah created_at revision (biar tetap tanggal upload)
+            // History approval yang pakai published_date
 
             foreach ($validated['rev'] ?? [] as $rev) {
                 $doc = Document::findOrFail($rev);
@@ -130,7 +164,55 @@ class DocumentRevisionController extends Controller
                 'reason' => $validated['reason'],
             ]);
 
-            event(new NewCreatedDocument($document, 'Dokumen ' . $document->title . ' telah dibuat oleh ' . $document->uploader->name . '.'));
+            if ($isOldDoc) {
+                // Step 1: Pengecekan Format (Pengendali Dokumen) - pakai published_date
+                $historyFormat = DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => 'Auto-approved Format (dokumen lama yang sudah disahkan)',
+                ]);
+                $historyFormat->timestamps = false;
+                $historyFormat->created_at = $validated['published_date'];
+                $historyFormat->updated_at = $validated['published_date'];
+                $historyFormat->save();
+
+                // Step 2: Pengecekan Konten (Bagian Mutu) - pakai published_date
+                $historyContent = DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => 'Auto-approved Content (dokumen lama yang sudah disahkan)',
+                ]);
+                $historyContent->timestamps = false;
+                $historyContent->created_at = $validated['published_date'];
+                $historyContent->updated_at = $validated['published_date'];
+                $historyContent->save();
+
+                // Step 3: Pengesahan (Upload signed file) - pakai published_date
+                $historyApproved = DocumentHistory::create([
+                    'document_id' => $document->id,
+                    'revision_id' => $revision->id,
+                    'action' => 'Approved',
+                    'performed_by' => Auth::id(),
+                    'reason' => 'Auto-approved Final (dokumen lama yang sudah disahkan)',
+                ]);
+                $historyApproved->timestamps = false;
+                $historyApproved->created_at = $validated['published_date'];
+                $historyApproved->updated_at = $validated['published_date'];
+                $historyApproved->save();
+            }
+
+            // Kirim notifikasi berdasarkan tipe dokumen
+            if ($isOldDoc) {
+                // Dokumen lama: kirim notif ke admin untuk monitoring
+                event(new \App\Events\OldDocumentUploaded($document, 'Dokumen lama "' . $document->title . '" berhasil diinput dan aktif (Nomor: ' . $document->code . ')'));
+            } else {
+                // Dokumen baru: kirim notif ke Pengendali Dokumen
+                event(new NewCreatedDocument($document, 'Dokumen "' . $document->title . '" telah dibuat oleh ' . $document->uploader->name));
+            }
 
             return redirect()->route('document_revision.index')->with('success', 'Dokumen revisi berhasil dibuat dan menunggu persetujuan.');
         } catch (\Exception $e) {
@@ -207,7 +289,6 @@ class DocumentRevisionController extends Controller
                 'title' => 'required|string|max:255',
                 'category_id' => 'required',
                 'rev' => 'nullable|array',
-                'code' => 'required|string|unique:documents,code,' . $documentRevision->document->id . '|max:30',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
                 'description' => 'required|string',
             ];
@@ -220,7 +301,9 @@ class DocumentRevisionController extends Controller
 
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
-            $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+            // Gunakan code yang sudah ada dari document (tidak berubah saat revisi)
+            $docCode = $documentRevision->document->code;
+            $fileName = str_replace(['/', '\\'], '-', $docCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
             if (Storage::disk('dokumen-revision')->exists($documentRevision->file_path)) {
                 Storage::disk('dokumen-revision')->delete($documentRevision->file_path);
             }
@@ -254,8 +337,8 @@ class DocumentRevisionController extends Controller
 
             $documentRevision->document->update([
                 'title' => $validated['title'],
-                'code' => $validated['code'],
                 'category_id' => $validated['category_id'],
+                // code tidak diubah karena harus tetap konsisten
             ]);
 
             foreach ($validated['rev'] ?? [] as $rev) {
@@ -276,7 +359,13 @@ class DocumentRevisionController extends Controller
 
             event(new NewCreatedDocument($documentRevision->document, 'Dokumen ' . $documentRevision->document->title . ' telah direvisi oleh ' . $documentRevision->document->uploader->name . '.'));
 
-            return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil diperbarui dan menunggu persetujuan.');
+            // Redirect berdasarkan role
+            if (auth()->user()->isRole('Kepala-Puskesmas')) {
+                return redirect()->route('active_document.index')
+                    ->with('success', '✅ Pengajuan revisi dokumen berhasil dikirim. Menunggu proses persetujuan.');
+            }
+
+            return redirect()->route('document_revision.index')->with('success', '✅ Dokumen berhasil diperbarui dan menunggu persetujuan.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui dokumen. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
         }
@@ -381,6 +470,7 @@ class DocumentRevisionController extends Controller
                 $documentRevision->document->update([
                     'is_active' => true,
                     'current_revision_id' => $documentRevision->id,
+                    'published_date' => now()->format('Y-m-d'), // Set tanggal terbit saat dokumen disahkan
                 ]);
 
                 // Change status to Expired
@@ -420,30 +510,55 @@ class DocumentRevisionController extends Controller
                 'reason' => $validated['reason'] ?? null,
             ]);
 
-            // For Notification
-            $message = 'Dokumen ' . $documentRevision->document->title . ' Menunggu Persetujuan.';
-            $link = route('document_approval.index');
+            // Notifikasi dengan pesan spesifik dan link langsung
+            $docTitle = $documentRevision->document->title;
+            $docLink = route('document_approval.index', ['highlight' => $documentRevision->document->id]);
+
+            // Tentukan redirect URL dan toast message berdasarkan role dan status
+            $isKepalaPuskesmas = auth()->user()->isRole('Kepala-Puskesmas');
+            $redirectRoute = $isKepalaPuskesmas ? 'document.active' : 'document_approval.index';
+            $redirectParams = [];
 
             if ($uploadFileSigned) {
-                // Dokumen sudah final disetujui
-                return redirect()->route('document_approval.index')->with('success', 'Dokumen berhasil disetujui dan telah aktif.');
+                // Dokumen sudah final disetujui - kirim notif ke uploader
+                event(new \App\Events\DocumentStatusUpdated(
+                    $documentRevision->document,
+                    'approved',
+                    'Dokumen "' . $docTitle . '" telah disetujui dan aktif',
+                    $documentRevision->document->uploaded_by
+                ));
+                return redirect()->route($redirectRoute, $redirectParams)->with('success', 'Dokumen "' . $docTitle . '" berhasil disetujui dan telah aktif.');
             } else if ($documentRevision->acc_format && !$documentRevision->acc_content) {
                 // Menunggu approval Bagian Mutu
-                event(new NewApprovalDocument($documentRevision->document, [1, 3], $message, $link));
+                $message = 'Dokumen "' . $docTitle . '" menunggu persetujuan konten dari Anda';
+                event(new NewApprovalDocument($documentRevision->document, [3], $message, $docLink));
+                return redirect()->route($redirectRoute, $redirectParams)->with('success', 'Persetujuan format berhasil. Dokumen menunggu persetujuan konten dari Bagian Mutu.');
             } else if (!$documentRevision->acc_format && $documentRevision->acc_content) {
                 // Menunggu approval Pengendali Dokumen
-                event(new NewApprovalDocument($documentRevision->document, [1, 2], $message, $link));
+                $message = '[PENGECEKAN FORMAT] Dokumen "' . $docTitle . '" menunggu persetujuan format dari Anda';
+                event(new NewApprovalDocument($documentRevision->document, [2], $message, $docLink));
+                return redirect()->route($redirectRoute, $redirectParams)->with('success', 'Persetujuan konten berhasil. Dokumen menunggu persetujuan format dari Pengendali Dokumen.');
             } else if ($documentRevision->acc_format && $documentRevision->acc_content && $validated['status'] !== 'Disetujui') {
                 // Kedua approval sudah true, menunggu upload file signed dari Pengendali Dokumen
-                event(new NewApprovalDocument($documentRevision->document, [2], $message, $link));
+                $message = '[UPLOAD SIGNED] Dokumen "' . $docTitle . '" siap untuk upload file yang sudah ditandatangani';
+                event(new NewApprovalDocument($documentRevision->document, [2], $message, $docLink));
+                return redirect()->route($redirectRoute, $redirectParams)->with('success', 'Dokumen telah disetujui. Menunggu upload file yang sudah ditandatangani dari Pengendali Dokumen.');
             } else if ($validated['status'] === 'Pengajuan Revisi') {
-                // Dokumen ditolak, perlu revisi
-                $message = 'Dokumen ' . $documentRevision->document->title . ' Membutuhkan Revisi.';
+                // Dokumen ditolak, perlu revisi - kirim ke uploader
+                $reason = $validated['reason'] ?? 'Tidak ada alasan spesifik';
+                event(new \App\Events\DocumentStatusUpdated(
+                    $documentRevision->document,
+                    'revision',
+                    'Dokumen "' . $docTitle . '" membutuhkan revisi. Alasan: ' . $reason,
+                    $documentRevision->document->uploaded_by
+                ));
+                $message = 'Dokumen "' . $docTitle . '" Membutuhkan Revisi';
                 $link = route('document_revision.edit', ['documentRevision' => $documentRevision->id]);
                 event(new NewApprovalDocument($documentRevision->document, $roles, $message, $link));
+                return redirect()->route($redirectRoute, $redirectParams)->with('info', '📝 Dokumen "' . $docTitle . '" telah diajukan untuk revisi. Menunggu proses revisi dari PJ Program.');
             }
 
-            return redirect()->route('document_approval.index')->with('success', 'Status dokumen berhasil diperbarui.');
+            return redirect()->route($redirectRoute, $redirectParams)->with('success', 'Persetujuan dokumen berhasil diproses.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui status dokumen. Silakan coba lagi. Error: ' . $e->getMessage());
         }

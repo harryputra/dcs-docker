@@ -24,10 +24,18 @@ class SendApprovalDocumentNotification
      */
     public function handle(NewApprovalDocument $event): void
     {
-        $user = User::whereHas('roles', function ($query) use ($event) {
-            $query->whereIn('id', $event->roles);
+        // Cari user dengan role yang berwenang
+        $users = User::whereHas('roles', function ($query) use ($event) {
+            $query->whereIn('id', array_filter($event->roles, fn($r) => $r != 1)); // Exclude admin dari roles
         })->get();
 
-        Notification::send($user, new DocumentApprovalNotification($event->document,$event->message,$event->link));
+        // Tambahkan Admin yang mau terima semua notif
+        $admins = User::whereHas('roles', function ($query) {
+            $query->where('id', 1); // Administrator
+        })->where('receive_all_notifications', true)->get();
+
+        $users = $users->merge($admins);
+
+        Notification::send($users, new DocumentApprovalNotification($event->document, $event->message, $event->link));
     }
 }

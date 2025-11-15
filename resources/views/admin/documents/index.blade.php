@@ -6,9 +6,9 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title fw-semibold mb-4">Daftar Dokumen</h5>
+                <h5 class="mb-4 card-title fw-semibold">Daftar Dokumen</h5>
                 @can('create-documents')
-                    <a href="{{ route('documents.create') }}" class="btn btn-primary mb-3">Tambah Dokumen</a>
+                    <a href="{{ route('documents.create') }}" class="mb-3 btn btn-primary">Tambah Dokumen</a>
                 @endcan
                 <table class="table table-bordered">
                     <thead class="table-light">
@@ -17,6 +17,8 @@
                             <th>Judul</th>
                             <th>Kategori</th>
                             <th>Uploader</th>
+                            <th>Tanggal Upload</th>
+                            <th>Tanggal Terbit</th>
                             <th>File</th>
                             <th>Aksi</th>
                         </tr>
@@ -28,6 +30,10 @@
                                 <td>{{ $document->title }}</td>
                                 <td>{{ $document->category->name ?? '-' }}</td>
                                 <td>{{ $document->uploader->name ?? '-' }}</td>
+                                <td>{{ $document->created_at ? \Carbon\Carbon::parse($document->created_at)->format('d/m/Y') : '-' }}
+                                </td>
+                                <td>{{ $document->published_date ? \Carbon\Carbon::parse($document->published_date)->format('d/m/Y') : '-' }}
+                                </td>
                                 <td>
                                     @if ($document->currentRevision)
                                         <a href="{{ route('file.dokumen', ['filename' => $document->currentRevision->file_path]) }}"
