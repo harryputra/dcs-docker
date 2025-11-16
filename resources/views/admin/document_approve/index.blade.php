@@ -1,6 +1,6 @@
 @extends('layouts.layout_admin')
 
-@section('title', 'Revisi Document')
+@section('title', 'Pengesahan Dokumen')
 
 @section('content')
     <div class="container-fluid">
@@ -29,8 +29,7 @@
                                             );
                                         @endphp
                                         <tr>
-                                            <td>{{ $document->code . ' ' . (($roles->contains('bagian-mutu') && $latestDocRevision->acc_content) || ($roles->contains('bagian-mutu') && !$latestDocRevision->format)) }}
-                                            </td>
+                                            <td>{{ $document->code }}</td>
                                             <td>{{ $document->title }}</td>
                                             <td>
                                                 <ul class="list-group">
@@ -212,23 +211,28 @@
                                                             aria-describedby="emailHelp" id="acc_judul_doc" disabled>
                                                     </div>
                                                 </div>
-                                                <div class="mb-3 row align-items-center">
-                                                    <div class="col-md-12">
-                                                        <label for="acc_code_input" class="form-label">Nomor
-                                                            Dokumen<span class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control" name="code"
-                                                            aria-describedby="emailHelp" id="acc_code_input"
-                                                            placeholder="Masukkan nomor dokumen"
-                                                            {{ auth()->user()->isRole('Pengendali-Dokumen') ? '' : 'disabled readonly' }}>
-                                                        <small class="text-muted">
-                                                            @if (auth()->user()->isRole('Pengendali-Dokumen'))
-                                                                Isi nomor dokumen untuk persetujuan (hanya sekali di awal)
-                                                            @else
-                                                                Nomor dokumen hanya dapat diisi oleh Pengendali Dokumen
-                                                            @endif
-                                                        </small>
+
+                                                <!-- Klasifikasi Dokumen (Hanya untuk Pengendali Dokumen) -->
+                                                @if (auth()->user()->isRole('Pengendali-Dokumen'))
+                                                    <div class="mb-3 row align-items-center"
+                                                        id="classification_container">
+                                                        <div class="col-md-12">
+                                                            <label class="form-label">Klasifikasi Dokumen<span
+                                                                    class="text-danger">*</span></label>
+
+                                                            <select id="classification_select" name="classification_id"
+                                                                class="form-control" required>
+                                                                <option value="">-- Pilih Klasifikasi Dokumen --
+                                                                </option>
+                                                            </select>
+
+                                                            <small class="mt-1 text-muted d-block">
+                                                                <i class="ti ti-info-circle"></i> Pilih klasifikasi dokumen
+                                                            </small>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                @endif
+
                                                 <div class="col-md-12">
                                                     <div class="form-group">
                                                         <label class="form-label">Kategori

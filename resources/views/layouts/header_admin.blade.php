@@ -133,6 +133,15 @@
                                 <span class="hide-menu">Kategori Dokumen</span>
                             </a>
                         </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @if (Str::contains(request()->url(), 'classifications')) active @endif"
+                                href="{{ route('classifications.index') }}" aria-expanded="false">
+                                <span>
+                                    <i class="ti ti-list-numbers"></i>
+                                </span>
+                                <span class="hide-menu">Klasifikasi Dokumen</span>
+                            </a>
+                        </li>
                     @endcan
                     @can('active-document')
                         <li class="sidebar-item">

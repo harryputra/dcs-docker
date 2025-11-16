@@ -1,6 +1,6 @@
 @extends('layouts.layout_admin')
 
-@section('title', 'Document')
+@section('title', 'Tambah Revisi Dokumen')
 
 @section('content')
 

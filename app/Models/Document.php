@@ -59,40 +59,21 @@ class Document extends Model
 
     public function classification(): BelongsTo
     {
-        return $this->belongsTo(DocumentClassification::class, 'classification_id');
-    }
-
-    /**
-     * Get full classification code by tracing up the hierarchy
-     * Example: KS.01.01.13
-     */
-    public function getFullClassificationCode(): string
-    {
-        if (!$this->classification) {
-            return '';
-        }
-
-        $codes = [];
-        $current = $this->classification;
-
-        // Trace up to root, collecting codes
-        while ($current) {
-            array_unshift($codes, $current->code);
-            $current = $current->parent;
-        }
-
-        return implode('.', $codes);
+        return $this->belongsTo(Classification::class, 'classification_id');
     }
 
     /**
      * Generate document code based on classification and sequence
-     * Format: [ClassificationCode]/[Sequence]-[Puskesmas]/[Category]/[Month]/[Year]
+     * Format: [KodeKlasifikasi]/[Sequence]-[Puskesmas]/[Category]/[Month]/[Year]
      * Example: KS.01.01.13/020-PKM GRD/SK/I/2025
+     *
+     * Phase 1 (Approval): KS.01.01.13/020-PKM GRD/SK/-/-
+     * Phase 2 (Published): KS.01.01.13/020-PKM GRD/SK/XI/2025
      */
     public function generateDocumentCode(): string
     {
-        // Build classification code by tracing hierarchy
-        $classCode = $this->getFullClassificationCode();
+        // Get classification code
+        $classCode = $this->classification->kode_klasifikasi ?? '';
 
         // Format sequence number with leading zeros (3 digits)
         $sequence = str_pad($this->sequence_number, 3, '0', STR_PAD_LEFT);
@@ -103,16 +84,16 @@ class Document extends Model
         // Get category code
         $categoryCode = $this->category->code ?? '';
 
-        // Convert month to Roman numerals
-        $month = $this->published_date ? $this->getRomanMonth($this->published_date) : '';
+        // Convert month to Roman numerals (only if published_date exists)
+        $month = $this->published_date ? $this->getRomanMonth($this->published_date) : '-';
 
-        // Get year
-        $year = $this->published_date ? date('Y', strtotime($this->published_date)) : '';
+        // Get year (only if published_date exists)
+        $year = $this->published_date ? date('Y', strtotime($this->published_date)) : '-';
 
-        // Build complete code: KS.01.01.13/020-PKM GRD/SK/I/2025
+        // Build complete code: KS.01.01.13/020-PKM GRD/SK/XI/2025
+        // Or partial: KS.01.01.13/020-PKM GRD/SK/-/-
         return "{$classCode}/{$sequence}-{$puskesmas}/{$categoryCode}/{$month}/{$year}";
     }
-
     /**
      * Convert month number to Roman numerals
      */

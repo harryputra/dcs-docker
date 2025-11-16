@@ -29,9 +29,9 @@
             orderConfig = [
                 [2, "desc"]
             ];
-        } else if (url === '/categories') {
+        } else if (url === '/categories' || url === '/classifications') {
             orderConfig = [
-                [0, "asc"]
+                [1, "asc"]
             ];
         } else {
             orderConfig = [
@@ -45,10 +45,9 @@
             "searching": true,
             "ordering": true,
             "order": orderConfig,
-            "columnDefs": [{
-                "orderable": false,
-                "targets": 0 // Disable sorting untuk kolom pertama (checkbox)
-            }]
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.5/i18n/id.json"
+            }
         });
     });
 </script>

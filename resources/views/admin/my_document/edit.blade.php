@@ -1,6 +1,6 @@
 @extends('layouts.layout_admin')
 
-@section('title', 'Document')
+@section('title', 'Upload File Dokumen')
 
 @section('content')
 

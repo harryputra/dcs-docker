@@ -72,6 +72,80 @@ $(document).ready(function () {
         $('#reason_container').css('display', 'none')
         $('#acc_judul_doc').val(data.judul)
 
+        console.log('Document code:', data.code)
+        console.log('Classification ID:', data.classification_id)
+        console.log(
+            'Has /-/ ?',
+            data.code ? data.code.indexOf('/-/') : 'no code'
+        )
+
+        // Jika code sudah ada (dokumen revisi dengan nomor lengkap), sembunyikan field klasifikasi
+        if (
+            data.code &&
+            data.code !== '' &&
+            data.code !== null &&
+            data.code.indexOf('/-/') === -1
+        ) {
+            console.log('HIDING classification field - document has full code')
+            // Dokumen sudah punya nomor lengkap, sembunyikan klasifikasi
+            $('#classification_container').hide()
+            $('#classification_select').removeAttr('required')
+
+            // Tambahkan hidden input untuk tetap kirim classification_id
+            if ($('#hidden_classification_id').length === 0) {
+                $('#classification_select').after(
+                    '<input type="hidden" name="classification_id" id="hidden_classification_id" value="' +
+                        data.classification_id +
+                        '">'
+                )
+            } else {
+                $('#hidden_classification_id').val(data.classification_id)
+            }
+        } else {
+            console.log(
+                'SHOWING classification field - new document or partial code'
+            )
+            // Dokumen baru atau belum ada nomor lengkap, tampilkan klasifikasi
+            $('#classification_container').show()
+
+            // Load classifications
+            const classificationSelect = $('#classification_select')
+
+            // Clear existing options except first
+            classificationSelect.find('option:not(:first)').remove()
+
+            // Fetch classifications
+            fetch('/api/classifications/all')
+                .then(response => response.json())
+                .then(classifications => {
+                    classifications.forEach(classification => {
+                        const option = new Option(
+                            `${classification.kode_klasifikasi} - ${classification.nama_klasifikasi}`,
+                            classification.id
+                        )
+                        classificationSelect.append(option)
+                    })
+
+                    // Set value jika ada (parsial code dengan /-/-)
+                    if (
+                        data.classification_id &&
+                        data.classification_id !== '' &&
+                        data.classification_id !== null
+                    ) {
+                        classificationSelect.val(data.classification_id)
+                    } else {
+                        classificationSelect.val('')
+                    }
+                })
+                .catch(error =>
+                    console.error('Error loading classifications:', error)
+                )
+
+            classificationSelect.attr('disabled', false)
+            classificationSelect.attr('required', true)
+            $('#hidden_classification_id').remove()
+        }
+
         // Jika code sudah ada, tampilkan value dan disable field. Jika belum ada, biarkan editable untuk Pengendali Dokumen
         if (data.code && data.code !== '' && data.code !== null) {
             $('#acc_code_input').val(data.code)

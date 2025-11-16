@@ -1,6 +1,6 @@
 @extends('layouts.layout_admin')
 
-@section('title', 'Document')
+@section('title', 'Detail Riwayat Dokumen')
 
 @section('content')
     <div class="container-fluid">

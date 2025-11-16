@@ -14,9 +14,11 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'SOP (Standard Operating Procedure)'],
-            ['name' => 'Laporan Bulanan'],
-            ['name' => 'Dokumen Pelatihan Staf'],
+            ['name' => 'SOP (Standard Operating Procedure)', 'code' => 'SPO'],
+            ['name' => 'Surat Keputusan', 'code' => 'SK'],
+            ['name' => 'Laporan Bulanan', 'code' => 'LB'],
+            ['name' => 'Dokumen Pelatihan Staf', 'code' => 'DPS'],
+            ['name' => 'Surat Tugas', 'code' => 'ST'],
         ];
 
         foreach ($categories as $category) {

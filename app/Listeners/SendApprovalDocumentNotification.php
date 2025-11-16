@@ -32,7 +32,7 @@ class SendApprovalDocumentNotification
         // Tambahkan Admin yang mau terima semua notif
         $admins = User::whereHas('roles', function ($query) {
             $query->where('id', 1); // Administrator
-        })->where('receive_all_notifications', true)->get();
+        })->get();
 
         $users = $users->merge($admins);
 

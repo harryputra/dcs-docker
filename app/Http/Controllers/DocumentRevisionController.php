@@ -57,6 +57,7 @@ class DocumentRevisionController extends Controller
             'id' => $documentRevision->id,
             'judul' => $documentRevision->document->title,
             'code' => $documentRevision->document->code,
+            'classification_id' => $documentRevision->document->classification_id,
             'category' => $documentRevision->document->category->name,
             'uploader' => $documentRevision->document->uploader->name,
             'status' => $documentRevision->status,
@@ -378,13 +379,8 @@ class DocumentRevisionController extends Controller
                 'status' => 'required|in:Disetujui,Pengajuan Revisi,Draft',
                 'reason' => 'required_if:status,Pengajuan Revisi|string|max:255',
                 'file' => 'required_if:status,Disetujui|file|mimes:pdf,doc,docx,ppt,pptx',
+                'classification_id' => 'nullable|exists:classifications,id',
             ];
-
-            // Code tidak perlu required lagi karena akan auto-generate dari klasifikasi
-            // Tapi jika user input manual tetap divalidasi
-            if (auth()->user()->isRole('Pengendali-Dokumen') && $request->has('code')) {
-                $rules['code'] = 'string|unique:documents,code,' . $documentRevision->document->id . '|max:100';
-            }
 
             if (auth()->user()->isRole('Administrator')) {
                 $rules['acc_format'] = 'boolean';
@@ -404,17 +400,45 @@ class DocumentRevisionController extends Controller
 
             $validated = $validator->validate();
 
-            // Update code dokumen jika ada input manual dari user (opsional)
-            if (isset($validated['code']) && auth()->user()->isRole('Pengendali-Dokumen')) {
-                $documentRevision->document->update(['code' => $validated['code']]);
+            // TAHAP 1: Pengendali Dokumen pilih klasifikasi dan generate kode parsial
+            if (isset($validated['classification_id']) && auth()->user()->isRole('Pengendali-Dokumen')) {
+                $document = $documentRevision->document;
 
-                // Rename file dengan code yang baru
+                // Cek apakah ini dokumen baru atau revisi
+                if (!$document->sequence_number) {
+                    // Dokumen BARU: generate sequence number baru
+                    $document->classification_id = $validated['classification_id'];
+                    $document->sequence_number = Document::getNextSequenceNumber($validated['classification_id']);
+                    $document->puskesmas_code = 'PKM GRD';
+
+                    // published_date masih NULL untuk kode parsial dokumen baru
+                    $document->published_date = null;
+                } else {
+                    // Dokumen REVISI: tetap gunakan sequence_number dan published_date yang lama
+                    if ($document->classification_id != $validated['classification_id']) {
+                        $document->classification_id = $validated['classification_id'];
+                    }
+                    // sequence_number dan published_date TIDAK diubah untuk revisi
+                    // published_date tetap ada sehingga bulan/tahun tidak hilang
+                }
+
+                $document->save();
+
+                // Load relasi untuk generate code
+                $document->load(['classification', 'category']);
+
+                // Generate kode:
+                // - Dokumen baru: HM.01.01.13/001-PKM GRD/SK/-/- (bulan/tahun masih dash)
+                // - Dokumen revisi: HM.01.01.13/001-PKM GRD/SK/XI/2025 (bulan/tahun tetap ada)
+                $generatedCode = $document->generateDocumentCode();
+                $document->code = $generatedCode;
+                $document->save();
+
+                // Rename file dengan code parsial
                 $oldFilePath = $documentRevision->file_path;
                 $fileExtension = pathinfo($oldFilePath, PATHINFO_EXTENSION);
+                $newFileName = str_replace(['/', '\\'], '-', $generatedCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $document->title) . '.' . $fileExtension;
 
-                $newFileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $documentRevision->document->title) . '.' . $fileExtension;
-
-                // Jika ada file lama, rename
                 if (Storage::disk('dokumen-revision')->exists($oldFilePath)) {
                     $oldContent = Storage::disk('dokumen-revision')->get($oldFilePath);
                     Storage::disk('dokumen-revision')->put($newFileName, $oldContent);
@@ -459,21 +483,20 @@ class DocumentRevisionController extends Controller
                 $file = $request->file('file');
                 $fileExtension = $file->getClientOriginalExtension();
 
-                // Generate kode dokumen otomatis jika belum ada
+                // TAHAP 2: Upload file signed, update published_date dan regenerate kode lengkap
                 $document = $documentRevision->document;
-                if (!$document->code) {
-                    // Set published_date dulu sebelum generate code
-                    $document->published_date = now()->format('Y-m-d');
-                    $document->save();
 
-                    // Load relasi klasifikasi untuk generate code
-                    $document->load(['classification', 'category']);
+                // Set published_date untuk kode lengkap
+                $document->published_date = now()->format('Y-m-d');
+                $document->save();
 
-                    // Generate kode dokumen lengkap
-                    $generatedCode = $document->generateDocumentCode();
-                    $document->code = $generatedCode;
-                    $document->save();
-                }
+                // Load relasi untuk generate code lengkap
+                $document->load(['classification', 'category']);
+
+                // Regenerate kode dokumen lengkap: HM.01.01.13/001-PKM GRD/SK/XI/2025
+                $generatedCode = $document->generateDocumentCode();
+                $document->code = $generatedCode;
+                $document->save();
 
                 $fileName = str_replace(['/', '\\'], '-', $document->code) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $document->title) . '_(Signed)' . '.' . $fileExtension;
                 Storage::disk('dokumen-approved')->put($fileName, file_get_contents($file));
@@ -488,10 +511,8 @@ class DocumentRevisionController extends Controller
                 $documentRevision->document->update([
                     'is_active' => true,
                     'current_revision_id' => $documentRevision->id,
-                    'published_date' => now()->format('Y-m-d'), // Set tanggal terbit saat dokumen disahkan
-                ]);
-
-                // Change status to Expired
+                    'published_date' => now()->format('Y-m-d'),
+                ]);                // Change status to Expired
                 foreach ($documentRevision->revisedDocument() as $doc) {
                     $doc->currentRevision->update([
                         'status' => 'Expired'

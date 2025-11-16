@@ -1,6 +1,6 @@
 @extends('layouts.layout_admin')
 
-@section('title', 'Document')
+@section('title', 'Dashboard')
 
 @section('content')
     <div class="container-fluid">
@@ -222,15 +222,6 @@
                                                             class="btn btn-sm btn-admin" title="Lihat Detail">
                                                             <i class="ti ti-eye"></i>
                                                         </a>
-                                                        @if (
-                                                            $document->currentRevision->document_id === $document->id &&
-                                                                ($document->latestHistory->revision->status == 'Disetujui' ||
-                                                                    $document->latestHistory->revision->status == 'Pengajuan Revisi'))
-                                                            <a href="{{ route('document_revision.edit', $document->latestHistory->revision->id) }}"
-                                                                class="btn btn-sm btn-approver" title="Revisi Dokumen">
-                                                                <i class="ti ti-pencil"></i>
-                                                            </a>
-                                                        @endif
                                                     @elseif($document->is_active || $document->currentRevision->latestRevision($document->id)->status === 'Expired')
                                                         <a href="{{ route('documents.show', ['document' => $document->id]) }}"
                                                             class="btn btn-sm btn-admin" title="Lihat Detail">

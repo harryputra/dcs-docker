@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     protected $table = 'categories';
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'code'];
 
     public function documents(): HasMany
     {

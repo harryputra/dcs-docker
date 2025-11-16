@@ -200,14 +200,18 @@ class DocumentController extends Controller
             $rules = [
                 'title' => 'required|string|max:255',
                 'category_id' => 'required|exists:categories,id',
-                'classification_id' => 'required|exists:document_classifications,id',
                 'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
                 'description' => 'required|string',
                 'created_at' => 'required|date|before_or_equal:today',
                 'is_old_document' => 'nullable|boolean',
-                'code' => 'nullable|required_if:is_old_document,1|string|max:255',
-                'published_date' => 'nullable|required_if:is_old_document,1|date|before_or_equal:today',
             ];
+
+            // Tambahkan validasi khusus untuk dokumen lama
+            if ($request->has('is_old_document') && $request->is_old_document == 1) {
+                $rules['classification_id'] = 'required|exists:classifications,id';
+                $rules['sequence_number'] = 'required|integer|min:1';
+                $rules['published_date'] = 'required|date|before_or_equal:today';
+            }
 
             if (auth()->user()->isRole('Administrator')) {
                 $rules['noApproval'] = 'boolean';
@@ -219,38 +223,50 @@ class DocumentController extends Controller
             // Jika dokumen lama, set code dan is_active
             $isOldDoc = !empty($validated['is_old_document']);
 
-            // Generate sequence number untuk dokumen baru (bukan dokumen lama)
-            $sequenceNumber = null;
-            if (!$isOldDoc) {
-                $sequenceNumber = Document::getNextSequenceNumber($validated['classification_id']);
-            }
-
             $docData = [
                 'title' => $validated['title'],
-                'code' => $isOldDoc ? $validated['code'] : null, // Code langsung diisi jika dokumen lama
+                'code' => null, // Will be generated below for old docs
                 'category_id' => $validated['category_id'],
-                'classification_id' => $validated['classification_id'],
-                'sequence_number' => $sequenceNumber,
-                'puskesmas_code' => 'PKM GRD',
                 'uploaded_by' => Auth::id(),
                 'current_revision_id' => null,
                 'created_at' => $validated['created_at'],
-                'published_date' => $validated['published_date'] ?? null, // Set jika dokumen lama
-                'is_active' => $isOldDoc ? 1 : 0, // Auto-aktif jika dokumen lama
+                'is_active' => $isOldDoc ? 1 : 0,
             ];
+
+            // Tambahkan field khusus untuk dokumen lama
+            if ($isOldDoc) {
+                $docData['published_date'] = $validated['published_date'];
+                $docData['classification_id'] = $validated['classification_id'];
+                $docData['sequence_number'] = (int) $validated['sequence_number']; // Cast ke integer
+                $docData['puskesmas_code'] = 'PKM GRD';
+            } else {
+                $docData['published_date'] = null;
+            }
 
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
 
+            // Create document first untuk bisa generate code
+            $document = Document::create($docData);
+
+            // Generate code untuk dokumen lama
+            if ($isOldDoc) {
+                $document->load(['classification', 'category']);
+                $generatedCode = $document->generateDocumentCode();
+                $document->code = $generatedCode;
+                $document->save();
+            }
+
             // Generate filename sesuai tipe dokumen
             if ($isOldDoc) {
-                // Dokumen lama: gunakan code yang sudah disahkan dan berakhiran (Signed)
-                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+                // Dokumen lama: gunakan code yang sudah di-generate dan berakhiran (Signed)
+                $fileName = str_replace(['/', '\\'], '-', $document->code) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
                 // Simpan langsung ke dokumen-approved karena sudah disahkan
                 Storage::disk('dokumen-approved')->put($fileName, file_get_contents($file));
             } elseif (!empty($validated['noApproval'])) {
                 // Admin tanpa approval: gunakan TEMP dan berakhiran (Signed)
-                $docData['is_active'] = $validated['noApproval'];
+                $document->is_active = $validated['noApproval'];
+                $document->save();
                 $tempCode = 'TEMP_' . time();
                 $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
                 // Simpan ke dokumen-revision
@@ -262,8 +278,6 @@ class DocumentController extends Controller
                 // Simpan ke dokumen-revision untuk proses approval
                 Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
             }
-
-            $document = Document::create($docData);
 
             // Untuk dokumen lama, JANGAN ubah created_at document (biar tetap tanggal upload)
 

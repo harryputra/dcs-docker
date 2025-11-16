@@ -1,6 +1,6 @@
 @extends('layouts.layout_admin')
 
-@section('title', 'Revisi Document')
+@section('title', 'Dokumen Anda')
 
 @section('content')
     <div class="container-fluid">
@@ -110,15 +110,20 @@
                                                             <i class="ti ti-eye"></i>
                                                         </a>
 
-                                                        @if ($isAdmin && !$document->latestHistory->revision->acc_format && !$document->latestHistory->revision->acc_content)
-                                                            @if ($document->latestHistory->revision->status === 'Draft')
-                                                                {{-- Untuk dokumen baru yang masih Draft, gunakan route documents.edit --}}
+                                                        {{-- Button Edit/Revisi untuk Admin atau Owner --}}
+                                                        @if ($isAdmin || $isOwner)
+                                                            @if (
+                                                                $isAdmin &&
+                                                                    $document->latestHistory->revision->status === 'Draft' &&
+                                                                    !$document->latestHistory->revision->acc_format &&
+                                                                    !$document->latestHistory->revision->acc_content)
+                                                                {{-- Untuk dokumen baru yang masih Draft, HANYA ADMIN yang bisa edit --}}
                                                                 <a href="{{ route('documents.edit', $document->id) }}"
                                                                     class="btn btn-sm btn-approver" title="Edit Dokumen">
                                                                     <i class="ti ti-pencil"></i>
                                                                 </a>
-                                                            @else
-                                                                {{-- Untuk revisi dokumen yang sudah disetujui, gunakan route document_revision.edit --}}
+                                                            @elseif ($document->latestHistory->revision->status === 'Pengajuan Revisi')
+                                                                {{-- Untuk dokumen yang diminta revisi, Admin atau Owner bisa edit --}}
                                                                 <a href="{{ route('document_revision.edit', $document->latestHistory->revision->id) }}"
                                                                     class="btn btn-sm btn-approver" title="Revisi Dokumen">
                                                                     <i class="ti ti-pencil"></i>

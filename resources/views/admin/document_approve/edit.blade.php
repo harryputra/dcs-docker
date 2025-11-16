@@ -1,6 +1,6 @@
 @extends('layouts.layout_admin')
 
-@section('title', 'Detail Document')
+@section('title', 'Upload File Ditandatangani')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 <style>
     li {
@@ -87,7 +87,7 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="mb-4 card-title fw-semibold border-bottom">
+                        <h5 class="mb-4 card-title fw-semibold">
                             <i class="fa fa-file me-2"></i> Tracking Dokumen
                         </h5>
                         <div class="container">
@@ -241,7 +241,7 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="mb-4 card-title fw-semibold border-bottom">
+                        <h5 class="mb-4 card-title fw-semibold">
                             <i class="fa fa-file me-2"></i> File Dokumen
                         </h5>
                         <div class="mb-1 d-flex">
@@ -279,6 +279,7 @@
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="status" value="Disetujui">
+
                                 <div class="mb-3">
                                     <label class="form-label">File Dokumen yang Sudah di-TTD<span
                                             class="text-danger">*</span></label>
