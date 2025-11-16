@@ -284,8 +284,8 @@
                                     <label class="form-label">File Dokumen yang Sudah di-TTD<span
                                             class="text-danger">*</span></label>
                                     <input class="form-control" type="file" id="formFile" name="file" required
-                                        accept=".pdf, .docx, .pptx">
-                                    <small class="text-muted">Format: PDF, DOCX, PPTX</small>
+                                        accept=".pdf">
+                                    <small class="text-muted">Format: PDF (MAX. 20MB)</small>
                                 </div>
                                 <div class="d-flex justify-content-center">
                                     <button type="submit" class="btn btn-admin w-100">

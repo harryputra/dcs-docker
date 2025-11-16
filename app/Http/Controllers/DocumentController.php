@@ -201,7 +201,6 @@ class DocumentController extends Controller
             $rules = [
                 'title' => 'required|string|max:255',
                 'category_id' => 'required|exists:categories,id',
-                'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:20480',
                 'description' => 'required|string',
                 'created_at' => 'required|date|before_or_equal:today',
                 'is_old_document' => 'nullable|boolean',
@@ -209,6 +208,8 @@ class DocumentController extends Controller
 
             // Tambahkan validasi khusus untuk dokumen lama
             if ($request->has('is_old_document') && $request->is_old_document == 1) {
+                // Dokumen lama harus PDF
+                $rules['file_path'] = 'required|file|mimes:pdf|max:20480';
                 $rules['classification_id'] = 'required|exists:classifications,id';
                 $rules['sequence_number'] = [
                     'required',
@@ -218,6 +219,9 @@ class DocumentController extends Controller
                         ->where('classification_id', $request->classification_id)
                 ];
                 $rules['published_date'] = 'required|date|before_or_equal:today';
+            } else {
+                // Dokumen baru hanya boleh DOC, DOCX, XLS, XLSX
+                $rules['file_path'] = 'required|file|mimes:doc,docx,xls,xlsx|max:20480';
             }
 
             if (auth()->user()->isRole('Administrator')) {
@@ -441,8 +445,12 @@ class DocumentController extends Controller
 
             if (str_contains($e->getMessage(), 'Duplicate entry')) {
                 $errorMessage .= 'Nomor dokumen sudah ada dalam sistem. Silakan periksa kembali.';
-            } elseif (str_contains($e->getMessage(), 'file') || str_contains($e->getMessage(), 'upload')) {
-                $errorMessage .= 'Ukuran file terlalu besar atau format tidak didukung. Maksimal 20MB (PDF, DOC, DOCX, PPT, PPTX).';
+            } elseif (str_contains($e->getMessage(), 'file') || str_contains($e->getMessage(), 'upload') || str_contains($e->getMessage(), 'mimes')) {
+                if ($request->has('is_old_document') && $request->is_old_document == 1) {
+                    $errorMessage .= 'Format file tidak sesuai. Dokumen lama harus dalam format PDF. Maksimal 20MB.';
+                } else {
+                    $errorMessage .= 'Format file tidak sesuai. Dokumen baru harus dalam format DOC, DOCX, XLS, atau XLSX. Maksimal 20MB.';
+                }
             } else {
                 $errorMessage .= 'Terjadi kesalahan pada sistem. Silakan coba lagi atau hubungi administrator.';
             }

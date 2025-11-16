@@ -85,47 +85,31 @@ class DocumentRevisionController extends Controller
                 'title' => 'required|string|max:255',
                 'category_id' => 'required',
                 'rev' => 'required|array',
-                'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx',
+                'file_path' => 'required|file|mimes:doc,docx,xls,xlsx|max:20480',
                 'description' => 'required|string',
                 'reason' => 'required|string|max:255',
                 'created_at' => 'required|date|before_or_equal:today',
-                'is_old_document' => 'nullable|boolean',
-                'code' => 'nullable|required_if:is_old_document,1|string|max:255',
-                'published_date' => 'nullable|required_if:is_old_document,1|date|before_or_equal:today',
             ]);
 
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
 
-            // Jika dokumen lama, langsung set code dan is_active
-            $isOldDoc = !empty($validated['is_old_document']);
-
-            // Generate filename sesuai tipe dokumen
-            if ($isOldDoc) {
-                // Dokumen lama: gunakan code yang sudah disahkan dan berakhiran (Signed)
-                $fileName = str_replace(['/', '\\'], '-', $validated['code']) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
-                // Simpan langsung ke dokumen-approved karena sudah disahkan
-                Storage::disk('dokumen-approved')->put($fileName, file_get_contents($file));
-            } else {
-                // Dokumen baru: gunakan TEMP untuk sementara
-                $tempCode = 'TEMP_' . time();
-                $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
-                // Simpan ke dokumen-revision untuk proses approval
-                Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
-            }
+            // Dokumen revisi: gunakan TEMP untuk sementara
+            $tempCode = 'TEMP_' . time();
+            $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+            // Simpan ke dokumen-revision untuk proses approval
+            Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
 
             $document = Document::create([
                 'title' => $validated['title'],
-                'code' => $isOldDoc ? $validated['code'] : null, // Code langsung diisi jika dokumen lama
+                'code' => null,
                 'category_id' => $validated['category_id'],
                 'uploaded_by' => Auth::id(),
                 'current_revision_id' => null,
-                'created_at' => $validated['created_at'], // Tanggal dokumen dibuat (upload)
-                'published_date' => $validated['published_date'] ?? null, // Set jika dokumen lama
-                'is_active' => $isOldDoc ? 1 : 0, // Auto-aktif jika dokumen lama
+                'created_at' => $validated['created_at'],
+                'published_date' => null,
+                'is_active' => 0,
             ]);
-
-            // Untuk dokumen lama, JANGAN ubah created_at document (biar tetap tanggal upload)
 
             $revisionData = [
                 'document_id' => $document->id,
@@ -135,13 +119,6 @@ class DocumentRevisionController extends Controller
                 'description' => $validated['description'],
                 'revised_doc' => $validated['rev']
             ];
-
-            // Jika dokumen lama, auto-approve (melewati alur approval)
-            if ($isOldDoc) {
-                $revisionData['status'] = 'Disetujui';
-                $revisionData['acc_format'] = 1;
-                $revisionData['acc_content'] = 1;
-            }
 
             $revision = DocumentRevision::create($revisionData);
 
@@ -165,59 +142,30 @@ class DocumentRevisionController extends Controller
                 'reason' => $validated['reason'],
             ]);
 
-            if ($isOldDoc) {
-                // Step 1: Pengecekan Format (Pengendali Dokumen) - pakai published_date
-                $historyFormat = DocumentHistory::create([
-                    'document_id' => $document->id,
-                    'revision_id' => $revision->id,
-                    'action' => 'Approved',
-                    'performed_by' => Auth::id(),
-                    'reason' => 'Auto-approved Format (dokumen lama yang sudah disahkan)',
-                ]);
-                $historyFormat->timestamps = false;
-                $historyFormat->created_at = $validated['published_date'];
-                $historyFormat->updated_at = $validated['published_date'];
-                $historyFormat->save();
-
-                // Step 2: Pengecekan Konten (Bagian Mutu) - pakai published_date
-                $historyContent = DocumentHistory::create([
-                    'document_id' => $document->id,
-                    'revision_id' => $revision->id,
-                    'action' => 'Approved',
-                    'performed_by' => Auth::id(),
-                    'reason' => 'Auto-approved Content (dokumen lama yang sudah disahkan)',
-                ]);
-                $historyContent->timestamps = false;
-                $historyContent->created_at = $validated['published_date'];
-                $historyContent->updated_at = $validated['published_date'];
-                $historyContent->save();
-
-                // Step 3: Pengesahan (Upload signed file) - pakai published_date
-                $historyApproved = DocumentHistory::create([
-                    'document_id' => $document->id,
-                    'revision_id' => $revision->id,
-                    'action' => 'Approved',
-                    'performed_by' => Auth::id(),
-                    'reason' => 'Auto-approved Final (dokumen lama yang sudah disahkan)',
-                ]);
-                $historyApproved->timestamps = false;
-                $historyApproved->created_at = $validated['published_date'];
-                $historyApproved->updated_at = $validated['published_date'];
-                $historyApproved->save();
-            }
-
-            // Kirim notifikasi berdasarkan tipe dokumen
-            if ($isOldDoc) {
-                // Dokumen lama: kirim notif ke admin untuk monitoring
-                event(new \App\Events\OldDocumentUploaded($document, 'Dokumen lama "' . $document->title . '" berhasil diinput dan aktif (Nomor: ' . $document->code . ')'));
-            } else {
-                // Dokumen baru: kirim notif ke Pengendali Dokumen
-                event(new NewCreatedDocument($document, 'Dokumen "' . $document->title . '" telah dibuat oleh ' . $document->uploader->name));
-            }
+            // Kirim notifikasi ke Pengendali Dokumen
+            event(new NewCreatedDocument($document, 'Dokumen "' . $document->title . '" telah dibuat oleh ' . $document->uploader->name));
 
             return redirect()->route('document_revision.index')->with('success', 'Dokumen revisi berhasil dibuat dan menunggu persetujuan.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Error validasi
+            $errors = $e->errors();
+            if (isset($errors['file_path'])) {
+                return redirect()->back()->with('error', 'Format file tidak sesuai. Dokumen revisi harus dalam format DOC, DOCX, XLS, atau XLSX. Maksimal 20MB.')->withInput();
+            }
+            return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal membuat dokumen revisi. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+            // Error umum dengan pesan user-friendly
+            $errorMessage = 'Gagal membuat dokumen revisi. ';
+
+            if (str_contains($e->getMessage(), 'Duplicate')) {
+                $errorMessage .= 'Dokumen sudah ada dalam sistem.';
+            } elseif (str_contains($e->getMessage(), 'file') || str_contains($e->getMessage(), 'storage')) {
+                $errorMessage .= 'Gagal menyimpan file. Periksa ukuran dan format file.';
+            } else {
+                $errorMessage .= 'Terjadi kesalahan pada sistem. Silakan coba lagi atau hubungi administrator.';
+            }
+
+            return redirect()->back()->with('error', $errorMessage)->withInput();
         }
     }
 
@@ -378,7 +326,7 @@ class DocumentRevisionController extends Controller
             $rules = [
                 'status' => 'required|in:Disetujui,Pengajuan Revisi,Draft',
                 'reason' => 'required_if:status,Pengajuan Revisi|string|max:255',
-                'file' => 'required_if:status,Disetujui|file|mimes:pdf,doc,docx,ppt,pptx',
+                'file' => 'required_if:status,Disetujui|file|mimes:pdf|max:20480',
                 'classification_id' => 'nullable|exists:classifications,id',
             ];
 

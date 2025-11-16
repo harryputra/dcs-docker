@@ -140,8 +140,11 @@
                                 for="file_input">Upload
                                 file<span class="text-danger">*</span></label>
                             <input class="form-control" id="file_input" type="file" name="file_path" required
-                                accept=".pdf,.doc,.docx,.txt">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX, PPT, PPTX (MAX. 20MB)</p>
+                                accept=".doc,.docx,.xls,.xlsx">
+                            <p class="text-xs text-gray-500 dark:text-gray-400" id="oldDocLabel" style="display:none;">
+                                PDF (MAX. 20MB) - untuk dokumen lama yang sudah disahkan</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400" id="normalDocLabel">DOC, DOCX, XLS, XLSX
+                                (MAX. 20MB) - untuk dokumen baru</p>
                         </div>
 
                         @if (auth()->user()->isRole('Administrator'))
@@ -197,15 +200,23 @@
             const sequenceInput = document.getElementById('sequence_number');
             const publishedField = document.getElementById('published_date_field');
             const publishedInput = document.getElementById('published_date');
+            const fileInput = document.getElementById('file_input');
+            const oldDocLabel = document.getElementById('oldDocLabel');
+            const normalDocLabel = document.getElementById('normalDocLabel');
 
             if (this.checked) {
+                // Dokumen lama - hanya PDF
                 classificationField.style.display = 'block';
                 classificationInput.required = true;
                 sequenceField.style.display = 'block';
                 sequenceInput.required = true;
                 publishedField.style.display = 'block';
                 publishedInput.required = true;
+                fileInput.accept = '.pdf';
+                oldDocLabel.style.display = 'block';
+                normalDocLabel.style.display = 'none';
             } else {
+                // Dokumen baru - DOC, DOCX, XLS, XLSX
                 classificationField.style.display = 'none';
                 classificationInput.required = false;
                 classificationInput.value = '';
@@ -215,6 +226,9 @@
                 publishedField.style.display = 'none';
                 publishedInput.required = false;
                 publishedInput.value = '';
+                fileInput.accept = '.doc,.docx,.xls,.xlsx';
+                oldDocLabel.style.display = 'none';
+                normalDocLabel.style.display = 'block';
             }
         });
     </script>
