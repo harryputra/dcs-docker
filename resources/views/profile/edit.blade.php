@@ -1,42 +1,43 @@
 @extends('layouts.layout_admin')
 
 @section('title', 'Edit Profile')
-@section('content')
-    <div class="container pt-4">
-        <h4>Edit Profile</h4>
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
+@section('content')
+    <div class="container-fluid">
+        <h2 class="mb-4">Edit Profile</h2>
 
         @if ($errors->updatePassword->any())
-            <div class="alert alert-danger">
-                <ul>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa fa-exclamation-circle me-2"></i>
+                <ul class="mb-0">
                     @foreach ($errors->updatePassword->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
         @if ($errors->updateProfileInformation->any())
-            <div class="alert alert-danger">
-                <ul>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa fa-exclamation-circle me-2"></i>
+                <ul class="mb-0">
                     @foreach ($errors->updateProfileInformation->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
-        <div class="row mt-4">
+        <div class="mt-4 row">
 
             <!-- Card Change Credentials -->
             <div class="col-md-6">
-                <div class="card border-top border-success border-2">
+                <div class="border-2 card border-top border-success">
 
                     <div class="card-header">
-                        <h5>Change Profile</h5>
+                        <h5>Ubah Profile</h5>
                     </div>
                     <div class="card-body">
                         <form action="{{ route('user-profile-information.update') }}" method="POST">
@@ -55,7 +56,7 @@
                                     value="{{ auth()->user()->email }}" required>
                             </div>
 
-                            <div class="text-center mt-3">
+                            <div class="mt-3 text-center">
                                 <button type="submit" class="btn btn-admin">
                                     <i class="ti ti-save"></i> Save Changes
                                 </button>
@@ -67,9 +68,9 @@
 
             <!-- Card Change Password -->
             <div class="col-md-6">
-                <div class="card border-top border-warning border-2">
+                <div class="border-2 card border-top border-warning">
                     <div class="card-header">
-                        <h5>Change Password</h5>
+                        <h5>Ubah Kata Sandi</h5>
                     </div>
                     <div class="card-body">
                         <form action="{{ route('user-password.update') }}" method="POST">
@@ -93,7 +94,7 @@
                                     class="form-control" required>
                             </div>
 
-                            <div class="text-center mt-3">
+                            <div class="mt-3 text-center">
                                 <button type="submit" class="btn btn-danger">
                                     <i class="ti ti-key"></i> Update Password
                                 </button>
@@ -105,5 +106,39 @@
         </div>
     </div>
 
+    <!-- Toast Notification untuk Success -->
+    @if (session('status') === 'profile-information-updated' || session('status') === 'password-updated')
+        <div class="top-0 p-3 position-fixed end-0" style="z-index: 11">
+            <div class="text-white border-0 toast show align-items-center bg-success" role="alert" aria-live="assertive"
+                aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fa fa-check-circle me-2"></i>
+                        @if (session('status') === 'profile-information-updated')
+                            Profile berhasil diperbarui
+                        @else
+                            Kata sandi berhasil diperbarui
+                        @endif
+                    </div>
+                    <button type="button" class="m-auto btn-close btn-close-white me-2" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    var toastEl = document.querySelector('.toast');
+                    if (toastEl) {
+                        var toast = new bootstrap.Toast(toastEl, {
+                            autohide: true,
+                            delay: 3000
+                        });
+                        toast.show();
+                    }
+                }, 100);
+            });
+        </script>
+    @endif
 
 @endsection

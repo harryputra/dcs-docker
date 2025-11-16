@@ -40,7 +40,7 @@ class DocumentCreatedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => '📝 ' . $this->message,
+            'message' => '' . $this->message,
             'link' => route('document_approval.index', ['highlight' => $this->document->id]),
             'document_id' => $this->document->id
         ];

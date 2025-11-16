@@ -8,7 +8,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
                             <div>
                                 <h2 class="mb-2">Kategori Dokumen</h2>
                                 <x-breadcrumb :breadcrumbs="[['title' => 'Kategori Dokumen', 'url' => route('categories.index')]]" />
@@ -44,6 +44,7 @@
                                             <input type="checkbox" id="selectAll" class="form-check-input">
                                         </th>
                                         <th style="width: 50px;">No</th>
+                                        <th>Kode Kategori</th>
                                         <th>Kategori</th>
                                         <th style="width: 100px;">Aksi</th>
                                     </tr>
@@ -56,6 +57,7 @@
                                                     value="{{ $category->id }}" data-id="{{ $category->id }}">
                                             </td>
                                             <td>{{ $category->id }}</td>
+                                            <td>{{ $category->code }}</td>
                                             <td>{{ $category->name }}</td>
                                             <td>
                                                 <a href="{{ route('categories.edit', $category) }}"
@@ -92,7 +94,7 @@
                                                             $docCount = $category->documents()->count();
                                                         @endphp
                                                         @if ($docCount > 0)
-                                                            <div class="alert alert-warning mb-2" role="alert">
+                                                            <div class="mb-2 alert alert-warning" role="alert">
                                                                 <i class="ti ti-alert-triangle"></i>
                                                                 <strong>Peringatan:</strong> Kategori ini memiliki
                                                                 <strong>{{ $docCount }} dokumen</strong> terkait yang
@@ -152,7 +154,7 @@
                 <div class="modal-body">
                     <p class="mb-2">Apakah Anda yakin ingin menghapus <strong id="bulkDeleteCount">0</strong> kategori
                         yang dipilih?</p>
-                    <div id="bulkDocumentWarning" class="alert alert-warning mb-2" style="display: none;"
+                    <div id="bulkDocumentWarning" class="mb-2 alert alert-warning" style="display: none;"
                         role="alert">
                         <i class="ti ti-alert-triangle"></i>
                         <strong>Peringatan:</strong> Kategori yang dipilih memiliki <strong

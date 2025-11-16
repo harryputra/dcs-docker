@@ -74,10 +74,14 @@
                                             <td>{{ $document->category->name }}</td>
                                             <td>
                                                 @php
-                                                    $currentStatus =
-                                                        $document->currentRevision->document_id === $document->id
-                                                            ? $document->latestRevision->status
-                                                            : 'Expired';
+                                                    $currentStatus = 'Expired';
+                                                    if (
+                                                        $document->currentRevision &&
+                                                        $document->currentRevision->document_id === $document->id &&
+                                                        $document->latestRevision
+                                                    ) {
+                                                        $currentStatus = $document->latestRevision->status;
+                                                    }
                                                 @endphp
                                                 <span
                                                     class="badge
@@ -89,7 +93,7 @@
                                         @elseif ($currentStatus === 'Expired')
                                             bg-danger @endif
                                         ">
-                                                    {{ $document->latestRevision->status }}
+                                                    {{ $currentStatus }}
                                                 </span>
                                             </td>
                                             <td>{{ $document->uploader->name }}</td>
@@ -104,48 +108,50 @@
                                                 @endphp
 
                                                 @canany(['edit-documents', 'edit-revisions'])
-                                                    <div class="gap-1 d-flex">
-                                                        <a href="{{ route('document_revision.show', ['documentRevision' => $document->latestHistory->revision->id]) }}"
-                                                            class="btn btn-sm btn-admin" title="Lihat Detail">
-                                                            <i class="ti ti-eye"></i>
-                                                        </a>
+                                                    @if ($document->latestHistory && $document->latestHistory->revision)
+                                                        <div class="gap-1 d-flex">
+                                                            <a href="{{ route('document_revision.show', ['documentRevision' => $document->latestHistory->revision->id]) }}"
+                                                                class="btn btn-sm btn-admin" title="Lihat Detail">
+                                                                <i class="ti ti-eye"></i>
+                                                            </a>
 
-                                                        {{-- Button Edit/Revisi untuk Admin atau Owner --}}
-                                                        @if ($isAdmin || $isOwner)
-                                                            @if (
-                                                                $isAdmin &&
-                                                                    $document->latestHistory->revision->status === 'Draft' &&
-                                                                    !$document->latestHistory->revision->acc_format &&
-                                                                    !$document->latestHistory->revision->acc_content)
-                                                                {{-- Untuk dokumen baru yang masih Draft, HANYA ADMIN yang bisa edit --}}
-                                                                <a href="{{ route('documents.edit', $document->id) }}"
-                                                                    class="btn btn-sm btn-approver" title="Edit Dokumen">
-                                                                    <i class="ti ti-pencil"></i>
-                                                                </a>
-                                                            @elseif ($document->latestHistory->revision->status === 'Pengajuan Revisi')
-                                                                {{-- Untuk dokumen yang diminta revisi, Admin atau Owner bisa edit --}}
-                                                                <a href="{{ route('document_revision.edit', $document->latestHistory->revision->id) }}"
-                                                                    class="btn btn-sm btn-approver" title="Revisi Dokumen">
-                                                                    <i class="ti ti-pencil"></i>
-                                                                </a>
-                                                            @endif
-                                                        @endif
-
-                                                        @if ($isAdmin)
-                                                            @can('delete-documents')
-                                                                @if (in_array($document->latestHistory->revision->status, ['Draft', 'Proses Revisi', 'Pengajuan Revisi']) &&
+                                                            {{-- Button Edit/Revisi untuk Admin atau Owner --}}
+                                                            @if ($isAdmin || $isOwner)
+                                                                @if (
+                                                                    $isAdmin &&
+                                                                        $document->latestHistory->revision->status === 'Draft' &&
                                                                         !$document->latestHistory->revision->acc_format &&
                                                                         !$document->latestHistory->revision->acc_content)
-                                                                    <button type="button" class="btn btn-sm btn-danger"
-                                                                        title="Hapus Dokumen" data-bs-toggle="modal"
-                                                                        data-bs-target="#deleteModal{{ $document->id }}"
-                                                                        data-doc-title="{{ $document->title }}">
-                                                                        <i class="ti ti-trash"></i>
-                                                                    </button>
+                                                                    {{-- Untuk dokumen baru yang masih Draft, HANYA ADMIN yang bisa edit --}}
+                                                                    <a href="{{ route('documents.edit', $document->id) }}"
+                                                                        class="btn btn-sm btn-approver" title="Edit Dokumen">
+                                                                        <i class="ti ti-pencil"></i>
+                                                                    </a>
+                                                                @elseif ($document->latestHistory->revision->status === 'Pengajuan Revisi')
+                                                                    {{-- Untuk dokumen yang diminta revisi, Admin atau Owner bisa edit --}}
+                                                                    <a href="{{ route('document_revision.edit', $document->latestHistory->revision->id) }}"
+                                                                        class="btn btn-sm btn-approver" title="Revisi Dokumen">
+                                                                        <i class="ti ti-pencil"></i>
+                                                                    </a>
                                                                 @endif
-                                                            @endcan
-                                                        @endif
-                                                    </div>
+                                                            @endif
+
+                                                            @if ($isAdmin)
+                                                                @can('delete-documents')
+                                                                    @if (in_array($document->latestHistory->revision->status, ['Draft', 'Proses Revisi', 'Pengajuan Revisi']) &&
+                                                                            !$document->latestHistory->revision->acc_format &&
+                                                                            !$document->latestHistory->revision->acc_content)
+                                                                        <button type="button" class="btn btn-sm btn-danger"
+                                                                            title="Hapus Dokumen" data-bs-toggle="modal"
+                                                                            data-bs-target="#deleteModal{{ $document->id }}"
+                                                                            data-doc-title="{{ $document->title }}">
+                                                                            <i class="ti ti-trash"></i>
+                                                                        </button>
+                                                                    @endif
+                                                                @endcan
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 @endcanany
                                             </td>
                                         </tr>
@@ -153,7 +159,10 @@
                                         {{-- Modal Delete untuk setiap dokumen - Hanya untuk Admin --}}
                                         @if ($isAdmin)
                                             @can('delete-documents')
-                                                @if (in_array($document->latestHistory->revision->status, ['Draft', 'Proses Revisi', 'Pengajuan Revisi']) &&
+                                                @if (
+                                                    $document->latestHistory &&
+                                                        $document->latestHistory->revision &&
+                                                        in_array($document->latestHistory->revision->status, ['Draft', 'Proses Revisi', 'Pengajuan Revisi']) &&
                                                         !$document->latestHistory->revision->acc_format &&
                                                         !$document->latestHistory->revision->acc_content)
                                                     <div class="modal fade" id="deleteModal{{ $document->id }}" tabindex="-1"

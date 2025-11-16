@@ -363,10 +363,10 @@ class DocumentRevisionController extends Controller
             // Redirect berdasarkan role
             if (auth()->user()->isRole('Kepala-Puskesmas')) {
                 return redirect()->route('active_document.index')
-                    ->with('success', '✅ Pengajuan revisi dokumen berhasil dikirim. Menunggu proses persetujuan.');
+                    ->with('success', 'Pengajuan revisi dokumen berhasil dikirim. Menunggu proses persetujuan.');
             }
 
-            return redirect()->route('document_revision.index')->with('success', '✅ Dokumen berhasil diperbarui dan menunggu persetujuan.');
+            return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil diperbarui dan menunggu persetujuan.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui dokumen. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
         }
@@ -594,7 +594,7 @@ class DocumentRevisionController extends Controller
                 $message = 'Dokumen "' . $docTitle . '" Membutuhkan Revisi';
                 $link = route('document_revision.edit', ['documentRevision' => $documentRevision->id]);
                 event(new NewApprovalDocument($documentRevision->document, $roles, $message, $link));
-                return redirect()->route($redirectRoute, $redirectParams)->with('info', '📝 Dokumen "' . $docTitle . '" telah diajukan untuk revisi. Menunggu proses revisi dari PJ Program.');
+                return redirect()->route($redirectRoute, $redirectParams)->with('info', 'Dokumen "' . $docTitle . '" telah diajukan untuk revisi. Menunggu proses revisi dari PJ Program.');
             }
 
             return redirect()->route($redirectRoute, $redirectParams)->with('success', 'Persetujuan dokumen berhasil diproses.');

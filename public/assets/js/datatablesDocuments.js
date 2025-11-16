@@ -61,10 +61,10 @@ $(document).ready(function () {
         }
 
         // ✅ Filter kategori di kolom ke-3 (index 2)
-        table.column(2).search(kategori || '', true, false)
+        table.column(2).search(kategori || '', false, false)
 
         // ✅ Filter tahun di kolom Created At (index 5)
-        table.column(5).search(tahun || '', true, false)
+        table.column(5).search(tahun || '', false, false)
 
         table.draw()
     }

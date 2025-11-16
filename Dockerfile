@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
+# Copy custom PHP configuration
+COPY php/php.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Set working directory
 WORKDIR /var/www
 

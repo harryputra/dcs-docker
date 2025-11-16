@@ -15,6 +15,7 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class DocumentController extends Controller
 {
@@ -200,7 +201,7 @@ class DocumentController extends Controller
             $rules = [
                 'title' => 'required|string|max:255',
                 'category_id' => 'required|exists:categories,id',
-                'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:5120',
+                'file_path' => 'required|file|mimes:pdf,doc,docx,ppt,pptx|max:20480',
                 'description' => 'required|string',
                 'created_at' => 'required|date|before_or_equal:today',
                 'is_old_document' => 'nullable|boolean',
@@ -209,7 +210,13 @@ class DocumentController extends Controller
             // Tambahkan validasi khusus untuk dokumen lama
             if ($request->has('is_old_document') && $request->is_old_document == 1) {
                 $rules['classification_id'] = 'required|exists:classifications,id';
-                $rules['sequence_number'] = 'required|integer|min:1';
+                $rules['sequence_number'] = [
+                    'required',
+                    'integer',
+                    'min:1',
+                    \Illuminate\Validation\Rule::unique('documents', 'sequence_number')
+                        ->where('classification_id', $request->classification_id)
+                ];
                 $rules['published_date'] = 'required|date|before_or_equal:today';
             }
 
@@ -246,8 +253,18 @@ class DocumentController extends Controller
             $file = $request->file('file_path');
             $fileExtension = $file->getClientOriginalExtension();
 
+            // Mulai database transaction
+            \DB::beginTransaction();
+
             // Create document first untuk bisa generate code
             $document = Document::create($docData);
+
+            // Set created_at sesuai input user (override timestamp otomatis Laravel)
+            $document->timestamps = false;
+            $document->created_at = $validated['created_at'];
+            $document->updated_at = now();
+            $document->save();
+            $document->timestamps = true;
 
             // Generate code untuk dokumen lama
             if ($isOldDoc) {
@@ -395,10 +412,42 @@ class DocumentController extends Controller
                 $historyApproved->save();
             }
 
+            // Commit transaction jika semua berhasil
+            \DB::commit();
+
             // return redirect()->route('documents.index')->with('success', 'Document created successfully.');
-            return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil dibuat dan menunggu persetujuan.');
+            if ($isOldDoc) {
+                return redirect()->route('document_revision.index')->with('success', 'Dokumen lama berhasil ditambahkan dan disetujui.');
+            } else {
+                return redirect()->route('document_revision.index')->with('success', 'Dokumen berhasil dibuat dan menunggu persetujuan.');
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Rollback transaction jika ada error
+            \DB::rollBack();
+
+            // Pesan error validation yang user-friendly
+            $errors = $e->errors();
+            if (isset($errors['sequence_number'])) {
+                return redirect()->back()->with('error', 'Nomor urut dokumen sudah digunakan untuk klasifikasi ini. Silakan gunakan nomor urut yang berbeda.')->withInput();
+            }
+
+            return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal membuat dokumen. Silakan coba lagi. Error: ' . $e->getMessage())->withInput();
+            // Rollback transaction jika ada error
+            \DB::rollBack();
+
+            // Pesan error yang user-friendly
+            $errorMessage = 'Gagal membuat dokumen. ';
+
+            if (str_contains($e->getMessage(), 'Duplicate entry')) {
+                $errorMessage .= 'Nomor dokumen sudah ada dalam sistem. Silakan periksa kembali.';
+            } elseif (str_contains($e->getMessage(), 'file') || str_contains($e->getMessage(), 'upload')) {
+                $errorMessage .= 'Ukuran file terlalu besar atau format tidak didukung. Maksimal 20MB (PDF, DOC, DOCX, PPT, PPTX).';
+            } else {
+                $errorMessage .= 'Terjadi kesalahan pada sistem. Silakan coba lagi atau hubungi administrator.';
+            }
+
+            return redirect()->back()->with('error', $errorMessage)->withInput();
         }
     }
 

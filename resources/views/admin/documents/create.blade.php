@@ -141,7 +141,7 @@
                                 file<span class="text-danger">*</span></label>
                             <input class="form-control" id="file_input" type="file" name="file_path" required
                                 accept=".pdf,.doc,.docx,.txt">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX (MAX. 5MB)</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX, PPT, PPTX (MAX. 20MB)</p>
                         </div>
 
                         @if (auth()->user()->isRole('Administrator'))
