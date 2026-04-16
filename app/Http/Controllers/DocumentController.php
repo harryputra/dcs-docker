@@ -60,6 +60,43 @@ class DocumentController extends Controller
         ]);
     }
 
+    /**
+     * Preview file by revision ID using a JSON-wrapped Base64 stream.
+     * This is the 'Nuclear Option' to bypass IDM and other download managers
+     * because they cannot intercept file data hidden inside a JSON response.
+     */
+    public function previewFileByID($id)
+    {
+        $revision = DocumentRevision::findOrFail($id);
+        $filename = $revision->file_path;
+
+        if (str_contains($filename, '_(Signed)')) {
+            if (Storage::disk('dokumen-approved')->exists($filename)) {
+                $fileContent = Storage::disk('dokumen-approved')->get($filename);
+            } elseif (Storage::disk('dokumen-revision')->exists($filename)) {
+                $fileContent = Storage::disk('dokumen-revision')->get($filename);
+            } else {
+                abort(404, 'File tidak ditemukan.');
+            }
+        } elseif (Storage::disk('dokumen-revision')->exists($filename)) {
+            $fileContent = Storage::disk('dokumen-revision')->get($filename);
+        } else {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        if (!$fileContent) {
+            abort(404, 'Konten file tidak ditemukan.');
+        }
+
+        // Return JSON with Base64 data to fully bypass IDM interception
+        return response()->json([
+            'success' => true,
+            'content' => base64_encode($fileContent),
+            'mime' => 'application/pdf',
+            'name' => basename($filename)
+        ]);
+    }
+
     public function viewFile($filename)
     {
         // Cek apakah file adalah dokumen yang sudah disetujui (Signed)
@@ -279,23 +316,23 @@ class DocumentController extends Controller
             }
 
             // Generate filename sesuai tipe dokumen
+            $cleanTitle = preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']);
+            
             if ($isOldDoc) {
                 // Dokumen lama: gunakan code yang sudah di-generate dan berakhiran (Signed)
-                $fileName = str_replace(['/', '\\'], '-', $document->code) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+                $fileName = str_replace(['/', '\\'], '-', $document->code) . '_' . $cleanTitle . '_(Signed).' . $fileExtension;
                 // Simpan langsung ke dokumen-approved karena sudah disahkan
                 Storage::disk('dokumen-approved')->put($fileName, file_get_contents($file));
             } elseif (!empty($validated['noApproval'])) {
-                // Admin tanpa approval: gunakan TEMP dan berakhiran (Signed)
+                // Admin tanpa approval: Gunakan Judul + Timestamp + (Signed)
                 $document->is_active = $validated['noApproval'];
                 $document->save();
-                $tempCode = 'TEMP_' . time();
-                $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '_(Signed).' . $fileExtension;
+                $fileName = $cleanTitle . '_' . time() . '_(Signed).' . $fileExtension;
                 // Simpan ke dokumen-revision
                 Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
             } else {
-                // Dokumen baru biasa: gunakan TEMP
-                $tempCode = 'TEMP_' . time();
-                $fileName = str_replace(['/', '\\'], '-', $tempCode) . '_' . preg_replace('/[\/\\\?\%\*\:\|\\"\<\>\.\(\)]/', '_', $validated['title']) . '.' . $fileExtension;
+                // Dokumen baru biasa: Gunakan Judul + Timestamp
+                $fileName = $cleanTitle . '_' . time() . '.' . $fileExtension;
                 // Simpan ke dokumen-revision untuk proses approval
                 Storage::disk('dokumen-revision')->put($fileName, file_get_contents($file));
             }

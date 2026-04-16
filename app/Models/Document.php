@@ -20,7 +20,20 @@ class Document extends Model
         'classification_id',
         'sequence_number',
         'puskesmas_code',
+        'replaced_by_id',
+        'status_document',
+        'expired_at',
     ];
+
+    public function replacedBy(): BelongsTo
+    {
+        return $this->belongsTo(Document::class, 'replaced_by_id');
+    }
+
+    public function replaces(): HasMany
+    {
+        return $this->hasMany(Document::class, 'replaced_by_id');
+    }
 
     public function revisions()
     {

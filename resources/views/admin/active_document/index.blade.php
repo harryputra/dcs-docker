@@ -110,18 +110,17 @@
                                     <td class="px-6 py-4 text-center">{{ $document->title }}</td>
                                     <td class="px-6 py-4 text-center">{{ $document->category->name }}</td>
                                     <td class="px-6 py-4 text-center">
-                                        <span
-                                            class="badge
-                                @if ($document->latestRevision->status === 'Disetujui' && $document->is_active) bg-admin
-                                @elseif($document->latestRevision->status === 'Proses Revisi' || $document->latestRevision->status === 'Pengajuan Revisi')
-                                    bg-warning
-                                @elseif($document->latestRevision->status === 'Draft')
-                                    bg-light text-dark
-                                @else
-                                    bg-danger @endif
-                                ">
-                                            {{ $document->latestRevision->status }}
-                                        </span>
+                                        @if($document->status_document === 'Aktif')
+                                            <span class="badge bg-admin">Aktif</span>
+                                        @elseif($document->status_document === 'Diganti')
+                                            <span class="badge bg-warning text-dark">Diganti</span>
+                                        @elseif($document->status_document === 'Dicabut')
+                                            <span class="badge bg-danger">Dicabut</span>
+                                        @elseif($document->status_document === 'Kadaluarsa')
+                                            <span class="badge bg-secondary">Kadaluarsa</span>
+                                        @else
+                                            <span class="badge bg-light text-dark">Draft</span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 text-center">{{ $document->uploader->name }}</td>
                                     <td class="px-6 py-4 text-center">

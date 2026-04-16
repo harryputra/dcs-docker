@@ -37,7 +37,7 @@ services:
       MYSQL_USER: dcs_user
       MYSQL_PASSWORD: dcs_pass
     ports:
-      - "3306:3306"
+      - "33061:3306"
     volumes:
       - dbdata:/var/lib/mysql
     networks:

@@ -241,11 +241,12 @@
                                     </a>
                                 @endif
                             @endcanany
-                            <a href="{{ route('document_revision.view-file', ['filename' => $documentRevision->latestRevision()->file_path]) }}"
+                            <button type="button" 
+                                onclick="previewDocument('{{ route('document.preview', ['revision' => $documentRevision->latestRevision()->id]) }}')"
                                 class="btn {{ in_array($documentRevision->latestRevision()->status, ['Disetujui', 'Draft']) ? 'btn-admin' : 'btn-danger' }} d-flex align-items-center ms-2">
                                 <i class="ti ti-eye me-2"></i>
                                 Lihat
-                            </a>
+                            </button>
                             <a href="{{ route('document_revision.show-file', ['filename' => $documentRevision->latestRevision()->file_path]) }}"
                                 class="btn btn-info d-flex align-items-center ms-2" download target="_blank">
                                 <i class="ti ti-download me-2"></i>
@@ -323,10 +324,11 @@
                                                                 ">{{ $rev->status }}</span>
                                                 </td>
                                                 <td>
-                                                    <a href="{{ route('document_revision.view-file', ['filename' => $rev->file_path]) }}"
+                                                    <button type="button" 
+                                                        onclick="previewDocument('{{ route('document.preview', ['revision' => $rev->id]) }}')"
                                                         class="p-2 btn btn-sm btn-admin" title="Lihat File">
                                                         <i class="ti ti-eye"></i>
-                                                    </a>
+                                                    </button>
                                                     <a href="{{ route('document_revision.show-file', ['filename' => $rev->file_path]) }}"
                                                         class="p-2 btn btn-sm btn-info" title="Download File" download
                                                         target="_blank">
@@ -343,4 +345,5 @@
             @endcan
         </div>
     </div>
+    @include('components.pdf-preview-modal')
 @endsection

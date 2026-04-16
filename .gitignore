@@ -66,4 +66,7 @@ storage/logs/*.log
 .env.production
 
 # Test files
-test-whatsapp.php
+# Dev-only tools
+/routes/dev.php
+/resources/views/auth/login2.blade.php
+

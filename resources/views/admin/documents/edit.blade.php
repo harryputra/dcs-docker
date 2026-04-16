@@ -99,11 +99,15 @@
                                         );
                                     }
                                 @endphp
-                                @if ($fileUrl && $extension === 'pdf')
-                                    <!-- PDF Embed Preview -->
-                                    <div class="mt-3" style="height: 600px;">
-                                        <embed src="{{ $fileUrl }}" type="application/pdf" width="100%"
-                                            height="100%" style="border: 1px solid #ddd; border-radius: 4px;">
+                                    <!-- PDF View Button -->
+                                    <div class="mt-3 text-center p-5 bg-light rounded border border-dashed">
+                                        <i class="ti ti-file-type-pdf text-danger display-1 mb-3"></i>
+                                        <h5>Dokumen PDF Terdeteksi</h5>
+                                        <button type="button" 
+                                            onclick="previewDocument('{{ route('document.preview', ['revision' => $document->currentRevision->id]) }}')"
+                                            class="btn btn-admin mt-2">
+                                            <i class="ti ti-eye me-1"></i> Lihat Pratinjau Aman
+                                        </button>
                                     </div>
                                 @elseif ($fileUrl && in_array($extension, ['doc', 'docx']))
                                     <!-- DOC/DOCX Preview using Google Docs Viewer -->
@@ -116,10 +120,11 @@
                                     </div>
                                     <div class="mt-2 alert alert-info">
                                         <i class="ti ti-info-circle"></i> Preview menggunakan Google Docs Viewer.
-                                        <a href="{{ route('document_revision.view-file', ['filename' => $document->currentRevision->file_path]) }}"
+                                        <button type="button" 
+                                            onclick="previewDocument('{{ route('document.preview', ['revision' => $document->currentRevision->id]) }}')"
                                             class="btn btn-sm btn-admin">
                                             <i class="ti ti-eye"></i> Lihat File
-                                        </a>
+                                        </button>
                                         <a href="{{ $fileUrl }}" download target="_blank" class="btn btn-sm btn-info">
                                             <i class="ti ti-download"></i> Download File
                                         </a>
@@ -128,10 +133,11 @@
                                     <!-- Non-PDF/DOC file download link -->
                                     <div class="mt-2 alert alert-info">
                                         <i class="ti ti-file"></i> File tidak bisa di-preview.
-                                        <a href="{{ route('document_revision.view-file', ['filename' => $document->currentRevision->file_path]) }}"
+                                        <button type="button" 
+                                            onclick="previewDocument('{{ route('document.preview', ['revision' => $document->currentRevision->id]) }}')"
                                             class="btn btn-sm btn-admin">
                                             <i class="ti ti-eye"></i> Lihat File
-                                        </a>
+                                        </button>
                                         <a href="{{ $fileUrl }}" download target="_blank" class="btn btn-sm btn-info">
                                             <i class="ti ti-download"></i> Download File
                                         </a>
@@ -171,4 +177,5 @@
         </div>
     </div>
 
+    @include('components.pdf-preview-modal')
 @endsection

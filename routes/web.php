@@ -112,5 +112,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/documents/download/{filename}', [DocumentController::class, 'downloadDocument'])->name('file.dokumen')->middleware('can:view-documents');
     Route::get('/file/dokumen/{filename}', [DocumentController::class, 'showFile'])->name('document_revision.show-file')->middleware('can:view-documents');
     Route::get('/view/dokumen/{filename}', [DocumentController::class, 'viewFile'])->name('document_revision.view-file')->middleware('can:view-documents');
+    Route::post('/document/preview/{revision}', [DocumentController::class, 'previewFileByID'])->name('document.preview')->middleware('can:view-documents');
     Route::get('/documents_category', [DocumentController::class, 'getDocByCategory'])->name('document.getByCategory')->middleware('can:view-documents');
 });

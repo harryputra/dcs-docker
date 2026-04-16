@@ -4,117 +4,188 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="card">
+        <!-- Dashboard Header -->
+        <div class="mb-4 d-flex align-items-center justify-content-between">
+            <div>
+                <h2 class="mb-1 fw-bolder text-dark">Pusat Pengesahan Dokumen</h2>
+                <p class="mb-0 text-muted">Kelola dan verifikasi revisi dokumen terbaru dalam satu antarmuka terpadu.</p>
+            </div>
+            <div class="gap-2 d-flex">
+                <span class="px-3 py-2 border shadow-sm badge rounded-pill bg-white text-dark border-light">
+                    <i class="ti ti-calendar-event me-1 text-primary"></i> {{ date('d M Y') }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Meta Stats -->
+        <div class="mb-4 row">
+            <div class="col-md-3">
+                <div class="border-0 shadow-sm card bg-primary-subtle text-primary h-100">
+                    <div class="py-3 card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="p-3 badge bg-primary me-3">
+                                <i class="ti ti-hospital fs-6"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Total Dokumen Fasilitas</h6>
+                                <h4 class="mb-0 fw-bolder">{{ count($documents) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="border-0 shadow-sm card bg-warning-subtle text-warning h-100">
+                    <div class="py-3 card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="p-3 badge bg-warning me-3">
+                                <i class="ti ti-microscope fs-6"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Menunggu Review Mutu</h6>
+                                <h4 class="mb-0 fw-bolder">
+                                    {{ $documents->where(function($d) { return $d->currentRevision->latestRevision($d->id)->status !== 'Disetujui'; })->count() }}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6"></div>
+        </div>
+
+        <div class="border-0 shadow-sm card">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <h2 class="mb-4">Pengesahan Dokumen</h2>
                         <div class="mt-4 table-responsive">
-                            <table id="tableApproval" class="table table-striped">
+                            <table id="tableApproval" class="table align-middle table-hover custom-approval-table">
                                 <thead>
                                     <tr>
-                                        <th>Nomor Dokumen</th>
-                                        <th>Nama</th>
-                                        <th>Menggantikan Dokumen</th>
-                                        <th>Status</th>
-                                        <th>Berkas</th>
-                                        <th>Aksi</th>
+                                        <th class="ps-4">No. Dokumen</th>
+                                        <th>Nama Dokumen</th>
+                                        <th>Relasi Revisi</th>
+                                        <th>Status Alur</th>
+                                        <th>Pratinjau</th>
+                                        <th class="pe-4 text-end">Konfirmasi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($documents as $document)
                                         @php
-                                            $latestDocRevision = $document->currentRevision->latestRevision(
-                                                $document->id,
-                                            );
+                                            $latestDocRevision = $document->currentRevision->latestRevision($document->id);
                                         @endphp
                                         <tr>
-                                            <td>{{ $document->code }}</td>
-                                            <td>{{ $document->title }}</td>
-                                            <td>
-                                                <ul class="list-group">
-                                                    @foreach ($latestDocRevision->revisedDocument() as $doc)
-                                                        <li class="list-group-item">
-                                                            <a href="{{ route('document_revision.show-file', ['filename' => $doc->currentRevision->latestRevision($doc->id)->file_path]) }}"
-                                                                target="blank">{{ $doc->title }}</a>
-                                                        </li>
-                                                    @endforeach
-                                                    @if (count($latestDocRevision->revisedDocument()) == 0)
-                                                        <li class="list-group-item">-</li>
-                                                    @endif
-                                                </ul>
+                                            <td class="ps-4">
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold text-dark">{{ $document->code }}</span>
+                                                    <small class="text-muted">{{ $document->category->name }}</small>
+                                                </div>
                                             </td>
                                             <td>
-                                                <span
-                                                    class="badge
-                                                    @if ($latestDocRevision->status === 'Disetujui' && $document->is_active) bg-admin
-                                                    @elseif($latestDocRevision->status === 'Proses Revisi' || $latestDocRevision->status === 'Pengajuan Revisi')
-                                                        bg-warning
-                                                    @elseif($latestDocRevision->status === 'Draft')
-                                                        bg-light text-dark
-                                                    @else
-                                                        bg-danger @endif
-                                                ">
-                                                    {{ $latestDocRevision->status }}
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-light rounded p-2 me-3 d-none d-lg-block">
+                                                        <i class="ti ti-file-text fs-5 text-primary"></i>
+                                                    </div>
+                                                    <span class="fw-medium">{{ $document->title }}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    @forelse ($latestDocRevision->revisedDocument() as $doc)
+                                                        @php
+                                                            $rev = $doc->currentRevision->latestRevision($doc->id);
+                                                        @endphp
+                                                        <a href="javascript:void(0)" 
+                                                           onclick="previewDocument('{{ route('document.preview', ['revision' => $rev->id]) }}')"
+                                                           class="badge bg-light text-primary border border-primary-subtle text-decoration-none px-2 py-1">
+                                                            <i class="ti ti-link fs-2 me-1"></i> {{ Str::limit($doc->title, 15) }}
+                                                        </a>
+                                                    @empty
+                                                        <span class="text-muted">-</span>
+                                                    @endforelse
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $status = $latestDocRevision->status;
+                                                    $statusClass = 'bg-light text-dark';
+                                                    $icon = 'ti-circle-dotted';
+                                                    
+                                                    if ($status === 'Disetujui') {
+                                                        $statusClass = 'bg-success-subtle text-success';
+                                                        $icon = 'ti-circle-check-filled';
+                                                    } elseif (in_array($status, ['Proses Revisi', 'Pengajuan Revisi', 'Proses Pengesahan'])) {
+                                                        $statusClass = 'bg-warning-subtle text-warning';
+                                                        $icon = 'ti-clock-filled';
+                                                    } elseif ($status === 'Draft') {
+                                                        $statusClass = 'bg-info-subtle text-info';
+                                                        $icon = 'ti-edit-circle';
+                                                    } elseif (in_array($status, ['Ditolak', 'Dicabut', 'Kadaluarsa', 'Expired'])) {
+                                                        $statusClass = 'bg-danger-subtle text-danger';
+                                                        $icon = 'ti-circle-x-filled';
+                                                    } elseif ($status === 'Diganti') {
+                                                        $statusClass = 'bg-secondary-subtle text-secondary';
+                                                        $icon = 'ti-replace-filled';
+                                                    }
+                                                @endphp
+                                                <span class="badge rounded-pill {{ $statusClass }} px-3 py-2 fw-bold d-inline-flex align-items-center" style="font-size: 0.75rem; min-width: 100px;">
+                                                    <i class="ti {{ $icon }} fs-3 me-1"></i> {{ $status }}
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="{{ route('document_revision.view-file', ['filename' => $latestDocRevision->file_path]) }}"
-                                                    class="btn btn-sm btn-admin" title="Lihat File">
-                                                    <i class="ti ti-eye"></i>
-                                                </a>
-                                                <a href="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
-                                                    class="btn btn-sm btn-info" title="Download File" download
-                                                    target="_blank">
-                                                    <i class="ti ti-download"></i>
-                                                </a>
+                                                <div class="btn-group shadow-sm">
+                                                    <button type="button" 
+                                                        onclick="previewDocument('{{ route('document.preview', ['revision' => $latestDocRevision->id]) }}')"
+                                                        class="btn btn-white btn-sm border" data-bs-toggle="tooltip" title="Lihat Pratinjau">
+                                                        <i class="ti ti-eye text-primary"></i>
+                                                    </button>
+                                                    <a href="{{ route('document_revision.show-file', ['filename' => $latestDocRevision->file_path]) }}"
+                                                        class="btn btn-white btn-sm border" data-bs-toggle="tooltip" title="Unduh File" download target="_blank">
+                                                        <i class="ti ti-download text-info"></i>
+                                                    </a>
+                                                </div>
                                             </td>
                                             @can('edit-approval')
-                                                @if (
-                                                    ($roles->contains('administrator') && $latestDocRevision->acc_format && $latestDocRevision->acc_content) ||
-                                                        (($roles->contains('bagian-mutu') && $latestDocRevision->acc_content) ||
-                                                            ($roles->contains('bagian-mutu') && !$latestDocRevision->acc_format)) ||
-                                                        ($roles->contains('pengendali-dokumen') &&
-                                                            $latestDocRevision->acc_format &&
-                                                            !$latestDocRevision->acc_content) ||
-                                                        $latestDocRevision->status !== 'Draft' ||
-                                                        ($roles->contains('kepala-puskesmas') && (!$latestDocRevision->acc_format || !$latestDocRevision->acc_content)))
-                                                    {{-- Hanya VIEW (button mata abu-abu) --}}
-                                                    <td>
+                                                <td class="pe-4 text-end">
+                                                    @if (($roles->contains('administrator') && $latestDocRevision->acc_format && $latestDocRevision->acc_content) ||
+                                                         (($roles->contains('bagian-mutu') && $latestDocRevision->acc_content) || ($roles->contains('bagian-mutu') && !$latestDocRevision->acc_format)) ||
+                                                         ($roles->contains('pengendali-dokumen') && $latestDocRevision->acc_format && !$latestDocRevision->acc_content) ||
+                                                         $latestDocRevision->status !== 'Draft' ||
+                                                         ($roles->contains('kepala-puskesmas') && (!$latestDocRevision->acc_format || !$latestDocRevision->acc_content)))
+                                                        
                                                         <button type="button" id="btn-modalTerima"
-                                                            class="btn btn-secondary btn-sm" data-bs-toggle="modal"
+                                                            class="btn btn-light-info btn-sm rounded-2 px-3 py-1 fw-bold d-inline-flex align-items-center shadow-sm border border-info-subtle" 
+                                                            data-bs-toggle="modal"
                                                             data-bs-target="#modalTerima" data-id="{{ $latestDocRevision->id }}"
-                                                            title="Lihat Detail">
-                                                            <i class="ti ti-eye"></i>
+                                                            title="Detail Verifikasi">
+                                                            <i class="ti ti-shield-check fs-4 me-1 text-info"></i> 
+                                                            <span class="text-info" style="font-size: 0.75rem;">DETAIL</span>
                                                         </button>
-                                                    </td>
-                                                @else
-                                                    {{-- Ada aksi approve/tolak --}}
-                                                    <td>
-                                                        @if (auth()->user()->isRole('pengendali-dokumen') && $latestDocRevision->acc_format && $latestDocRevision->acc_content)
-                                                            {{-- Pengendali Dokumen upload file signed (final approval) --}}
-                                                            <span style="display: none">z</span>
-                                                            <a href="{{ route('document_approval.edit', ['documentRevision' => $latestDocRevision->id]) }}"
-                                                                class="btn btn-admin btn-sm" title="Terima Dokumen">
-                                                                <i class="ti ti-check"></i>
-                                                            </a>
-                                                        @else
-                                                            {{-- Button approve dengan modal --}}
-                                                            <button type="button" id="btn-modalTerima"
-                                                                class="btn btn-admin btn-sm" data-bs-toggle="modal"
-                                                                data-bs-target="#modalTerima"
-                                                                data-id="{{ $latestDocRevision->id }}" title="Terima Dokumen">
-                                                                <i class="ti ti-check"></i>
+                                                    @else
+                                                        <div class="gap-1 d-flex justify-content-end">
+                                                            @if (auth()->user()->isRole('pengendali-dokumen') && $latestDocRevision->acc_format && $latestDocRevision->acc_content)
+                                                                <a href="{{ route('document_approval.edit', ['documentRevision' => $latestDocRevision->id]) }}"
+                                                                    class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" title="Finalisasi Pengesahan">
+                                                                    <i class="ti ti-cloud-upload me-1"></i> Sahkan
+                                                                </a>
+                                                            @else
+                                                                <button type="button" id="btn-modalTerima"
+                                                                    class="btn btn-success btn-sm rounded-circle p-2 shadow-sm" data-bs-toggle="modal"
+                                                                    data-bs-target="#modalTerima"
+                                                                    data-id="{{ $latestDocRevision->id }}" title="Terima Dokumen">
+                                                                    <i class="ti ti-check"></i>
+                                                                </button>
+                                                            @endif
+                                                            <button type="button" id="btn-modalTolak"
+                                                                class="btn btn-danger btn-sm rounded-circle p-2 shadow-sm" data-bs-toggle="modal"
+                                                                data-bs-target="#modalTolak" data-id="{{ $latestDocRevision->id }}"
+                                                                title="Tolak / Revisi">
+                                                                <i class="ti ti-x"></i>
                                                             </button>
-                                                        @endif
-                                                        <button type="button" id="btn-modalTolak"
-                                                            class="btn btn-approver btn-sm" data-bs-toggle="modal"
-                                                            data-bs-target="#modalTolak" data-id="{{ $latestDocRevision->id }}"
-                                                            title="Minta Revisi">
-                                                            <i class="ti ti-refresh"></i>
-                                                        </button>
-                                                    </td>
-                                                @endif
+                                                        </div>
+                                                    @endif
+                                                </td>
                                             @endcan
                                         </tr>
                                     @endforeach
@@ -297,14 +368,108 @@
                                 </div>
                             </div>
 
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
+    <!-- Page Specific Styles -->
+    <style>
+        .custom-approval-table thead th {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            background-color: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .custom-approval-table tbody tr {
+            transition: all 0.2s ease-in-out;
+        }
+        .custom-approval-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        .badge {
+            letter-spacing: 0.025em;
+        }
+        .bg-success-subtle { background-color: #dcfce7 !important; }
+        .bg-warning-subtle { background-color: #fef9c3 !important; }
+        .bg-info-subtle { background-color: #e0f2fe !important; }
+        .btn-light-info {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+        .btn-light-info:hover {
+            background-color: #bae6fd;
+            color: #0c4a6e;
+        }
+        
+        .btn-white {
+            background: #fff;
+            color: #1e293b;
+            border-color: #e2e8f0;
+        }
+        .btn-white:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        
+        /* Modern DataTables Styling Integration */
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            outline: none !important;
+        }
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 4px 24px 4px 8px; /* Extra right padding for arrow */
+            font-size: 0.875rem;
+            outline: none !important;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 12px 12px;
+            background-color: #fff;
+            min-width: 60px;
+        }
+        
+        /* Modal Refinements */
+        .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .modal-header {
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+        .form-control:disabled {
+            background-color: #f1f5f9;
+            opacity: 0.7;
+        }
+    </style>
+
 @section('customJS')
+    <script>
+        $(document).ready(function() {
+            // Enable Tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+        });
+    </script>
     <script src="{{ asset('assets/js/datatablesApproval.js') }}"></script>
 @endsection
+@include('components.pdf-preview-modal')
 @endsection

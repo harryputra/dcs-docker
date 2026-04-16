@@ -161,19 +161,44 @@
                                     <i class="fa fa-info-circle me-2"></i> Detail Dokumen
                                 </h5>
 
-                                @if (!$is_active)
-                                    @if ($document->currentRevision->latestRevision($document->id)->status === 'Proses Revisi')
-                                        <div class="p-4 rounded bg-warning-subtle">
-                                            <p class="me-2">Dokumen ini sedang dalam proses revisi.</p>
+                                @if ($document->status_document !== 'Aktif')
+                                    @if ($document->status_document === 'Diganti')
+                                        <div class="p-3 mb-4 rounded bg-warning-subtle border border-warning">
+                                            <div class="d-flex align-items-center">
+                                                <i class="ti ti-alert-triangle fs-6 me-3 text-warning"></i>
+                                                <div>
+                                                    <p class="mb-0 fw-bold text-warning-emphasis">Dokumen ini telah DIGANTI.</p>
+                                                    <p class="mb-0">Dokumen pengganti: 
+                                                        @if($document->replacedBy)
+                                                            <a href="{{ route('documents.show', $document->replacedBy->id) }}" class="fw-bold text-primary">
+                                                                {{ $document->replacedBy->code }} - {{ $document->replacedBy->title }}
+                                                            </a>
+                                                        @else
+                                                            <span class="fst-italic text-muted">Dokumen baru belum tersedia di sistem.</span>
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    @else
-                                        <div class="p-2 rounded bg-danger-subtle d-flex">
-                                            <p class="me-2">Dokumen ini sudah tidak berlaku dan diganti dengan dokumen
-                                                lain.</p>
-                                            <a
-                                                href="{{ route('documents.show', ['document' => $document->currentRevision->document->id]) }}">
-                                                <u>Lihat dokumen terbaru</u>
-                                            </a>
+                                    @elseif ($document->status_document === 'Dicabut')
+                                        <div class="p-3 mb-4 rounded bg-danger-subtle border border-danger text-danger">
+                                            <div class="d-flex align-items-center">
+                                                <i class="ti ti-circle-x fs-6 me-3"></i>
+                                                <div>
+                                                    <p class="mb-0 fw-bold">DOKUMEN DICABUT</p>
+                                                    <p class="mb-0">Dokumen ini sudah tidak berlaku lagi berdasarkan ketentuan yang berlaku.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @elseif ($document->status_document === 'Kadaluarsa')
+                                        <div class="p-3 mb-4 rounded bg-secondary-subtle border border-secondary text-secondary">
+                                            <div class="d-flex align-items-center">
+                                                <i class="ti ti-clock-pause fs-6 me-3"></i>
+                                                <div>
+                                                    <p class="mb-0 fw-bold">DOKUMEN KADALUARSA</p>
+                                                    <p class="mb-0">Masa berlaku dokumen ini telah habis pada {{ \Carbon\Carbon::parse($document->expired_at)->format('d F Y') }}.</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     @endif
                                 @endif
@@ -195,15 +220,18 @@
                                             </tr>
                                             <tr>
                                                 <th scope="row">Status</th>
-                                                <td
-                                                    class="badge p-2 m-3
-                                            @if ($is_active) bg-admin
-                                            @elseif($document->currentRevision->latestRevision($document->id)->status === 'Proses Revisi')
-                                                bg-warning
-                                            @else
-                                                bg-danger @endif
-                                            ">
-                                                    {{ $document->currentRevision->latestRevision($document->id)->status === 'Disetujui' && $document->is_active ? 'Disetujui' : ($document->currentRevision->latestRevision($document->id)->status == 'Proses Revisi' ? 'Proses Revisi' : 'Expired') }}
+                                                <td class="px-6 py-4 text-center">
+                                                    @if($document->status_document === 'Aktif')
+                                                        <span class="badge bg-admin">Aktif</span>
+                                                    @elseif($document->status_document === 'Diganti')
+                                                        <span class="badge bg-warning text-dark">Diganti</span>
+                                                    @elseif($document->status_document === 'Dicabut')
+                                                        <span class="badge bg-danger">Dicabut</span>
+                                                    @elseif($document->status_document === 'Kadaluarsa')
+                                                        <span class="badge bg-secondary">Kadaluarsa</span>
+                                                    @else
+                                                        <span class="badge bg-light text-dark">Draft</span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                             <tr>
@@ -257,10 +285,11 @@
                                     </a>
                                 @endif
                             @endcanany
-                            <a href="{{ route('document_revision.view-file', ['filename' => $document->currentRevision->latestRevision($document->id)->file_path]) }}"
+                            <button type="button" 
+                                onclick="previewDocument('{{ route('document.preview', ['revision' => $document->currentRevision->id]) }}')"
                                 class="btn {{ $is_active ? 'btn-admin' : 'btn-danger' }} d-flex align-items-center ms-2">
                                 <i class="ti ti-eye me-2"></i> Lihat
-                            </a>
+                            </button>
                             <a href="{{ route('document_revision.show-file', ['filename' => $document->currentRevision->latestRevision($document->id)->file_path]) }}"
                                 class="btn btn-info d-flex align-items-center ms-2" download target="_blank">
                                 <i class="ti ti-download me-2"></i> Unduh
@@ -364,10 +393,11 @@
                                                 ">{{ $rev->status }}</span>
                                                     </td>
                                                     <td>
-                                                        <a href="{{ route('document_revision.view-file', ['filename' => $rev->file_path]) }}"
+                                                        <button type="button" 
+                                                            onclick="previewDocument('{{ route('document.preview', ['revision' => $rev->id]) }}')"
                                                             class="btn btn-sm btn-admin" title="Lihat File">
                                                             <i class="ti ti-eye"></i>
-                                                        </a>
+                                                        </button>
                                                         <a href="{{ route('document_revision.show-file', ['filename' => $rev->file_path]) }}"
                                                             class="btn btn-sm btn-info" title="Download File" download
                                                             target="_blank">
@@ -386,5 +416,5 @@
             @endcan
         </div>
     </div>
-
+    @include('components.pdf-preview-modal')
 @endsection
