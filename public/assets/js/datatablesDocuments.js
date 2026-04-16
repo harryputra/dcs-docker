@@ -42,19 +42,18 @@ $(document).ready(function () {
         const kategori = $('#filterKategori').val()
         const tahun = $('#filterTahun').val()
 
-        // Filter Status
+        // Filter Status (Sesuaikan dengan teks yang tampil di Badge)
         switch (status) {
             case 'aktif':
-                table.column(3).search('Disetujui', true, false)
+                table.column(3).search('Aktif')
                 break
             case 'kadaluarsa':
-                table.column(3).search('Expired', true, false)
+            case 'expired': 
+                table.column(3).search('Expired')
                 break
             case 'prosesrev':
-                table.column(3).search('Proses Revisi', true, false)
-                break
-            case 'pengajuanrev':
-                table.column(3).search('Pengajuan Revisi', true, false)
+            case 'revisi':
+                table.column(3).search('Revisi')
                 break
             default:
                 table.column(3).search('')

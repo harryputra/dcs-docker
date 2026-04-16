@@ -40,13 +40,21 @@ class DocumentHistoryController extends Controller
      */
     public function show(DocumentHistory $documentHistory)
     {
+        $user = Auth::user();
+        $roles = $user->roles->pluck('slug');
+
+        // Allow Admin, Quality, and Document Controllers to see everything
+        $isPowerUser = $roles->contains('administrator') || 
+                      $roles->contains('bagian-mutu') || 
+                      $roles->contains('pengendali-dokumen') || 
+                      $roles->contains('kepala-puskesmas');
+
         $reviserRole = $documentHistory->revision->reviser->roles->pluck('id');
-        $userRoles = auth()->user()->roles->pluck('id');
+        $userRoles = $user->roles->pluck('id');
+        $isSameRole = $reviserRole->intersect($userRoles)->isNotEmpty();
 
-        $rightRole = $reviserRole->intersect($userRoles)->isNotEmpty();
-        if ($rightRole || auth()->user()->isRole('kepala-puskesmas')) {
+        if ($isPowerUser || $isSameRole) {
             $documentHistory->load(['document', 'revision.reviser', 'performer']);
-
             return view('admin.document_histories.show', compact('documentHistory'));
         }
 

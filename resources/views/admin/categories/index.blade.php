@@ -15,29 +15,18 @@
                             </div>
                         </div>
 
-                        <div class="mb-1 d-flex justify-content-between align-items-center">
-                            <div>
-                                <button id="deleteSelectedBtn" class="btn btn-danger" style="display: none;">
-                                    <i class="ti ti-trash"></i> Hapus Dipilih (<span id="selectedCount">0</span>)
-                                </button>
+                        <div class="mb-4 d-flex justify-content-between align-items-center">
+                            <div class="input-group input-group-modern shadow-sm" style="max-width: 350px;">
+                                <span class="bg-white border-end-0 input-group-text"><i class="ti ti-search text-muted"></i></span>
+                                <input type="text" id="customSearch" class="bg-white border-start-0 form-control fs-3" placeholder="Cari kategori...">
                             </div>
-                            <a href="{{ route('categories.create') }}" class="btn btn-admin d-flex align-items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="icon icon-tabler icons-tabler-outline icon-tabler-file-code-2">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M10 12h-1v5h1" />
-                                    <path d="M14 12h1v5h-1" />
-                                    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                                    <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-                                </svg>
-                                Tambah Kategori Baru
+                            <a href="{{ route('categories.create') }}" class="btn btn-admin d-flex align-items-center rounded-pill px-4 shadow-sm">
+                                <i class="ti ti-plus me-1"></i> Tambah Kategori Baru
                             </a>
                         </div>
 
-                        <div class="mt-4 table-responsive">
-                            <table id="myTable" class="table table-striped">
+                        <div class="mt-2 table-responsive">
+                            <table id="myTable" class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
                                         <th style="width: 30px;">
@@ -176,8 +165,27 @@
         </div>
     </div>
 
+    <style>
+        .input-group-modern { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .input-group-modern input { border: none !important; box-shadow: none !important; padding: 10px 15px; }
+        .input-group-modern:focus-within { border-color: #14b8a6; box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1); }
+        .table-hover tbody tr:hover { background-color: #f8fafc; }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // DataTables Optimization
+            const table = $('#myTable').DataTable({
+                "dom": 'rt<"bottom"ip><"clear">',
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.5/i18n/id.json"
+                }
+            });
+
+            $('#customSearch').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
             const selectAll = document.getElementById('selectAll');
             const rowCheckboxes = document.querySelectorAll('.row-checkbox');
             const deleteBtn = document.getElementById('deleteSelectedBtn');

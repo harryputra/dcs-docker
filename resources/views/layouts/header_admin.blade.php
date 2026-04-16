@@ -11,8 +11,83 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="{{ asset('assets/css/searchableOptionList.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-</head>
+    
+    <!-- Select2 Modern Medical Theme -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        /* Select2 Premium Custom Theme Overrides */
+        .select2-container--default .select2-selection--single {
+            height: 48px !important;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            background-color: #ffffff !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: normal !important;
+            color: #1e293b !important;
+            font-size: 0.95rem;
+            padding-left: 0 !important;
+            font-weight: 500;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px !important;
+            right: 12px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #64748b transparent transparent transparent !important;
+            border-width: 6px 5px 0 5px !important;
+        }
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #14b8a6 !important;
+            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1) !important;
+        }
+        .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+            border-color: transparent transparent #14b8a6 transparent !important;
+            border-width: 0 5px 6px 5px !important;
+        }
+        
+        /* Dropdown Results Box */
+        .select2-dropdown {
+            border: 1px solid #f1f5f9 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+            overflow: hidden !important;
+            padding: 8px !important;
+            z-index: 9999 !important;
+        }
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #f1f5f9 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            outline: none !important;
+            background-color: #f8fafc !important;
+        }
+        .select2-results__option {
+            padding: 10px 12px !important;
+            border-radius: 8px !important;
+            margin-bottom: 2px !important;
+            font-size: 0.9rem !important;
+            color: #475569 !important;
+        }
+        .select2-results__option--highlighted[aria-selected] {
+            background-color: #f0fdfa !important;
+            color: #14b8a6 !important;
+        }
+        .select2-results__option--selected {
+            background-color: #14b8a6 !important;
+            color: white !important;
+        }
+        
+        /* Fix for wide dropdowns (e.g. filters) */
+        .select2-container { width: 100% !important; }
+        
+        /* Modal Fix */
+        .select2-container--open { z-index: 99999 !important; }
+    </style>
 
 <style>
     #notificationDropdown {
@@ -55,172 +130,184 @@
         <!-- Sidebar Start -->
         <aside class="left-sidebar">
             <!-- Sidebar scroll-->
-            <div>
-                <div class="brand-logo d-flex align-items-center justify-content-between">
-                    <a href="/" class="mt-3 text-nowrap logo-img">
-                        <img src="{{ asset('assets/images/logos/sidebar.webp') }}" width="150" alt="" />
+            <div class="scroll-sidebar" data-simplebar>
+                <div class="brand-logo d-flex align-items-center justify-content-between px-4 py-3">
+                    <a href="/" class="text-nowrap logo-img">
+                        <img src="{{ asset('assets/images/logos/sidebar.webp') }}" width="150" alt="Logo" class="sidebar-logo-img" />
                     </a>
-                    <div class="cursor-pointer close-btn d-xl-none d-block sidebartoggler" id="sidebarCollapse">
-                        <i class="ti ti-x fs-8"></i>
+                    <div class="sidebartoggler cursor-pointer d-xl-none d-block ms-auto" id="sidebarCollapse">
+                        <i class="ti ti-x fs-8 text-muted"></i>
                     </div>
                 </div>
-                <!-- Sidebar navigation-->
-                @if (auth()->user()->isRole('kepala-puskesmas') || auth()->user()->isRole('administrator'))
-                    <nav class="sidebar-nav-admin scroll-sidebar" data-simplebar="">
-                    @elseif (auth()->user()->isRole('pj-program') || auth()->user()->isRole('staff'))
-                        <nav class="sidebar-nav-user scroll-sidebar" data-simplebar="">
-                        @else
-                            <nav class="sidebar-nav-approver scroll-sidebar" data-simplebar="">
-                @endif
-                <ul id="sidebarnav">
-                    <li class="nav-small-cap">
-                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-                        <span class="hide-menu">Home</span>
-                    </li>
-                    <li class="sidebar-item">
-                        <a class="sidebar-link @if (Str::contains(request()->url(), 'dashboard')) active @endif"
-                            href="{{ route('dashboard') }}" aria-expanded="false">
-                            <span>
-                                <i class="ti ti-layout-dashboard"></i>
-                            </span>
-                            <span class="hide-menu">Dashboard</span>
-                        </a>
-                    </li>
-                    @can('administrate')
-                        <li class="nav-small-cap">
-                            <i class="ti ti-user nav-small-cap-icon fs-4"></i>
-                            <span class="hide-menu">USER</span>
+
+                <!-- Unified Professional Sidebar Navigation -->
+                <nav class="sidebar-nav">
+                    <ul id="sidebarnav" class="px-3">
+                        <li class="nav-small-cap mt-4">
+                            <span class="hide-menu fw-bolder text-uppercase text-muted letter-spacing-1">Overview</span>
                         </li>
+                        
                         <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), 'users')) active @endif"
-                                href="{{ url('/rbac/users') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-users"></i>
-                                </span>
-                                <span class="hide-menu">Users</span>
+                            @php $isDashboard = Str::contains(request()->url(), 'dashboard'); @endphp
+                            <a class="sidebar-link rounded-3 {{ $isDashboard ? 'active' : '' }}" href="{{ route('dashboard') }}" aria-expanded="false">
+                                <i class="ti ti-layout-dashboard fs-5"></i>
+                                <span class="hide-menu fw-semibold">Dashboard</span>
                             </a>
                         </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), 'roles')) active @endif"
-                                href="{{ url('/rbac/roles') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-user"></i>
-                                </span>
-                                <span class="hide-menu">Roles</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), 'permissions')) active @endif"
-                                href="{{ url('/rbac/permissions') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-user"></i>
-                                </span>
-                                <span class="hide-menu">Permission</span>
-                            </a>
-                        </li>
-                    @endcan
-                    <li class="nav-small-cap">
-                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-                        <span class="hide-menu">Dokumen</span>
-                    </li>
-                    @can('manage-categories')
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), 'categories')) active @endif"
-                                href="{{ route('categories.index') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-tag"></i>
-                                </span>
-                                <span class="hide-menu">Kategori Dokumen</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), 'classifications')) active @endif"
-                                href="{{ route('classifications.index') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-list-numbers"></i>
-                                </span>
-                                <span class="hide-menu">Klasifikasi Dokumen</span>
-                            </a>
-                        </li>
-                    @endcan
-                    @can('active-document')
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), 'active_document')) active @endif"
-                                href="{{ route('document.active') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-file"></i>
-                                </span>
-                                <span class="hide-menu">Dokumen</span>
-                            </a>
-                        </li>
-                    @endcan
-                    @can('view-revisions')
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), ['documents/create', 'document_revision'])) active @endif"
-                                href="{{ route('document_revision.index') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-folder"></i>
-                                </span>
-                                <span class="hide-menu">Dokumen Anda</span>
-                            </a>
-                        </li>
-                    @endcan
-                    @can('view-approval')
-                        @if (!auth()->user()->isRole('Kepala-Puskesmas'))
+
+                        @can('administrate')
+                            <li class="nav-small-cap mt-4">
+                                <span class="hide-menu fw-bolder text-uppercase text-muted letter-spacing-1">Management</span>
+                            </li>
                             <li class="sidebar-item">
-                                <a class="sidebar-link @if (Str::contains(request()->url(), 'document_approval')) active @endif"
-                                    href="{{ route('document_approval.index') }}" aria-expanded="false">
-                                    <span>
-                                        <i class="ti ti-checks"></i>
-                                    </span>
-                                    <span class="hide-menu">Pengesahan Dokumen</span>
+                                @php $isUsers = Str::contains(request()->url(), 'users'); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isUsers ? 'active' : '' }}" href="{{ url('/rbac/users') }}">
+                                    <i class="ti ti-users fs-5"></i>
+                                    <span class="hide-menu fw-semibold">User Access</span>
                                 </a>
                             </li>
-                        @endif
-                    @endcan
-                    @can('view-histories')
-                        <li class="sidebar-item">
-                            <a class="sidebar-link @if (Str::contains(request()->url(), 'document_histories')) active @endif"
-                                href="{{ route('document_histories.index') }}" aria-expanded="false">
-                                <span>
-                                    <i class="ti ti-history"></i>
-                                </span>
-                                <span class="hide-menu">Riwayat Dokumen</span>
-                            </a>
+                            <li class="sidebar-item">
+                                @php $isRoles = Str::contains(request()->url(), 'roles'); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isRoles ? 'active' : '' }}" href="{{ url('/rbac/roles') }}">
+                                    <i class="ti ti-user-check fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Roles & Permissions</span>
+                                </a>
+                            </li>
+                        @endcan
+
+                        <li class="nav-small-cap mt-4">
+                            <span class="hide-menu fw-bolder text-uppercase text-muted letter-spacing-1">E-Document</span>
                         </li>
-                    @endcan
-                    <li class="nav-small-cap">
-                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-                        <span class="hide-menu">AUTH</span>
-                    </li>
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="javascript:void(0);" aria-expanded="false"
-                            onclick="handleLogout();">
-                            <span>
-                                <i class="ti ti-login"></i>
-                            </span>
-                            <span class="hide-menu">Log Out</span>
-                        </a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                            style="display: none;">
-                            @csrf
-                        </form>
-                        <script>
-                            function handleLogout() {
-                                // Refresh CSRF token before submit
-                                fetch('/sanctum/csrf-cookie').then(() => {
-                                    document.getElementById('logout-form').submit();
-                                }).catch(() => {
-                                    // Fallback jika gagal refresh token
-                                    document.getElementById('logout-form').submit();
-                                });
-                            }
-                        </script>
-                    </li>
-                </ul>
+
+                        @can('manage-categories')
+                            <li class="sidebar-item">
+                                @php $isCat = Str::contains(request()->url(), 'categories'); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isCat ? 'active' : '' }}" href="{{ route('categories.index') }}">
+                                    <i class="ti ti-category-2 fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Kategori</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                @php $isClass = Str::contains(request()->url(), 'classifications'); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isClass ? 'active' : '' }}" href="{{ route('classifications.index') }}">
+                                    <i class="ti ti-list-numbers fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Klasifikasi</span>
+                                </a>
+                            </li>
+                        @endcan
+
+                        @can('active-document')
+                            <li class="sidebar-item">
+                                @php $isActiveDoc = Str::contains(request()->url(), 'active_document'); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isActiveDoc ? 'active' : '' }}" href="{{ route('document.active') }}">
+                                    <i class="ti ti-file-text fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Repository Utama</span>
+                                </a>
+                            </li>
+                        @endcan
+
+                        @can('view-revisions')
+                            <li class="sidebar-item">
+                                @php $isMyDoc = Str::contains(request()->url(), ['documents/create', 'document_revision']); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isMyDoc ? 'active' : '' }}" href="{{ route('document_revision.index') }}">
+                                    <i class="ti ti-folder fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Penyusunan</span>
+                                </a>
+                            </li>
+                        @endcan
+
+                        @can('view-approval')
+                            @if (!auth()->user()->isRole('Kepala-Puskesmas'))
+                                <li class="sidebar-item">
+                                    @php $isAppr = Str::contains(request()->url(), 'document_approval'); @endphp
+                                    <a class="sidebar-link rounded-3 {{ $isAppr ? 'active' : '' }}" href="{{ route('document_approval.index') }}">
+                                        <i class="ti ti-checks fs-5"></i>
+                                        <span class="hide-menu fw-semibold">Verifikasi</span>
+                                    </a>
+                                </li>
+                            @endif
+                        @endcan
+
+                        @can('view-histories')
+                            <li class="sidebar-item">
+                                @php $isHist = Str::contains(request()->url(), 'document_histories'); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isHist ? 'active' : '' }}" href="{{ route('document_histories.index') }}">
+                                    <i class="ti ti-history fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Log Audit</span>
+                                </a>
+                            </li>
+                        @endcan
+
+                        <li class="nav-small-cap mt-4">
+                            <span class="hide-menu fw-bolder text-uppercase text-muted letter-spacing-1">Action</span>
+                        </li>
+                        <li class="sidebar-item mb-5">
+                            <a class="sidebar-link rounded-3 text-danger border-0" href="javascript:void(0);" onclick="handleLogout(event);">
+                                <i class="ti ti-logout fs-5"></i>
+                                <span class="hide-menu fw-semibold">Keluar Sistem</span>
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+                        </li>
+                    </ul>
                 </nav>
-                <!-- End Sidebar navigation -->
             </div>
+        </aside>
+
+        <!-- Sidebar Custom Professional Styles -->
+        <style>
+            .left-sidebar {
+                border-right: 1px solid #f1f5f9;
+                background: #fff;
+            }
+            .sidebar-logo-img {
+                filter: drop-shadow(0 4px 6px rgba(0,0,0,0.02));
+            }
+            #sidebarnav .nav-small-cap {
+                font-size: 0.7rem;
+                padding: 10px 14px;
+                color: #94a3b8 !important;
+            }
+            #sidebarnav .sidebar-item {
+                margin-bottom: 5px;
+            }
+            #sidebarnav .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 16px;
+                color: #475569;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border-left: 4px solid transparent;
+            }
+            #sidebarnav .sidebar-link i {
+                color: #64748b;
+                transition: color 0.3s ease;
+            }
+            #sidebarnav .sidebar-link:hover {
+                background: #f0fdfa;
+                color: #14b8a6;
+            }
+            #sidebarnav .sidebar-link:hover i {
+                color: #14b8a6;
+            }
+            #sidebarnav .sidebar-link.active {
+                background: linear-gradient(to right, #f0fdfa, #f8fafc);
+                color: #14b8a6 !important;
+                border-left-color: #14b8a6;
+                box-shadow: none;
+            }
+            #sidebarnav .sidebar-link.active i {
+                color: #14b8a6;
+            }
+            #sidebarnav .sidebar-link.text-danger:hover {
+                background: #fff1f2;
+                color: #e11d48 !important;
+            }
+            #sidebarnav .sidebar-link.text-danger:hover i {
+                color: #e11d48;
+            }
+            .letter-spacing-1 { letter-spacing: 0.05em; }
+        </style>
             <!-- End Sidebar scroll-->
         </aside>
         <!--  Sidebar End -->

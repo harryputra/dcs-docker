@@ -15,40 +15,48 @@
 <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
 
+<!-- Select2 Global JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Universal Dropdown Modernizer Script -->
+<script>
+    $(document).ready(function() {
+        // Function to initialize select2 with premium theme
+        function initiateModernSelects() {
+            $('.form-select, select:not(.no-select2)').each(function() {
+                const $el = $(this);
+                // Avoid double initialization
+                if ($el.hasClass('select2-hidden-accessible')) return;
+
+                const placeholder = $el.attr('placeholder') || $el.find('option:first').text() || 'Pilih Opsi...';
+                
+                $el.select2({
+                    placeholder: placeholder,
+                    allowClear: true,
+                    width: '100%',
+                    // Ensure it works inside modals
+                    dropdownParent: $el.closest('.modal').length ? $el.closest('.modal-content') : $(document.body)
+                });
+            });
+        }
+
+        // Run on load
+        initiateModernSelects();
+
+        // Re-run when Bootstrap modals are shown (to fix parent issues)
+        $(document).on('shown.bs.modal', function() {
+            initiateModernSelects();
+        });
+    });
+</script>
+
 <!-- Dropdown Notification -->
 <script src="{{ asset('assets/js/dropdownNotification.js') }}"></script>
 
 <!-- Inisialisasi DataTable -->
 <script>
     $(document).ready(function() {
-
-        var url = window.location.pathname;
-        var orderConfig;
-
-        if (url === '/notifications') {
-            orderConfig = [
-                [2, "desc"]
-            ];
-        } else if (url === '/categories' || url === '/classifications') {
-            orderConfig = [
-                [1, "asc"]
-            ];
-        } else {
-            orderConfig = [
-                [5, "desc"]
-            ];
-        }
-
-        // DataTable Biasa
-        $('#myTable').DataTable({
-            "paging": true,
-            "searching": true,
-            "ordering": true,
-            "order": orderConfig,
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.13.5/i18n/id.json"
-            }
-        });
+        // Generic DataTable initialization removed to favor page-specific premium configurations
     });
 </script>
 
@@ -171,6 +179,11 @@
                 }
             }
         });
+        // Modern Logout Handler
+        window.handleLogout = function(event) {
+            if(event) event.preventDefault();
+            document.getElementById('logout-form').submit();
+        };
     });
 </script>
 

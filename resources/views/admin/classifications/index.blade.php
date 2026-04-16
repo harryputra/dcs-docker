@@ -17,25 +17,18 @@
                             </div>
                         </div>
 
-                        <div class="mb-1 d-flex justify-content-end">
-                            <a href="{{ route('classifications.create') }}" class="btn btn-admin d-flex align-items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="icon icon-tabler icons-tabler-outline icon-tabler-list-numbers">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M11 6h9" />
-                                    <path d="M11 12h9" />
-                                    <path d="M12 18h8" />
-                                    <path d="M4 16a2 2 0 1 1 4 0c0 .591 -.5 1 -1 1.5l-3 2.5h4" />
-                                    <path d="M6 10v-6l-2 2" />
-                                </svg>
-                                Tambah Klasifikasi Baru
+                        <div class="mb-4 d-flex justify-content-between align-items-center">
+                            <div class="input-group input-group-modern shadow-sm" style="max-width: 350px;">
+                                <span class="bg-white border-end-0 input-group-text"><i class="ti ti-search text-muted"></i></span>
+                                <input type="text" id="customSearch" class="bg-white border-start-0 form-control fs-3" placeholder="Cari klasifikasi...">
+                            </div>
+                            <a href="{{ route('classifications.create') }}" class="btn btn-admin d-flex align-items-center rounded-pill px-4 shadow-sm">
+                                <i class="ti ti-plus me-1"></i> Tambah Klasifikasi Baru
                             </a>
                         </div>
 
-                        <div class="mt-4 table-responsive">
-                            <table id="myTable" class="table table-striped">
+                        <div class="mt-2 table-responsive">
+                            <table id="myTable" class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
                                         <th style="width: 50px;">No</th>
@@ -125,4 +118,27 @@
             </div>
         </div>
     </div>
+    <style>
+        .input-group-modern { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .input-group-modern input { border: none !important; box-shadow: none !important; padding: 10px 15px; }
+        .input-group-modern:focus-within { border-color: #14b8a6; box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1); }
+        .table-hover tbody tr:hover { background-color: #f8fafc; }
+    </style>
+
+    @section('customJS')
+    <script>
+        $(document).ready(function() {
+            const table = $('#myTable').DataTable({
+                "dom": 'rt<"bottom"ip><"clear">',
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.5/i18n/id.json"
+                }
+            });
+
+            $('#customSearch').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+        });
+    </script>
+    @endsection
 @endsection
