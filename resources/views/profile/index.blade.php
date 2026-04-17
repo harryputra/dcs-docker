@@ -78,6 +78,28 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @if(Auth::check() && Auth::user()->isRole('Administrator'))
+                                    <div class="col-md-12">
+                                        <div class="p-4 rounded-4 border border-danger-subtle bg-danger-subtle h-100 mt-2">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <p class="text-danger small mb-1 fw-bold">DEVELOPER TOOLS</p>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="ti ti-code me-2 fs-5 text-danger"></i>
+                                                        <span class="text-dark fw-bold">Mode Developer & Database Manager</span>
+                                                    </div>
+                                                    <small class="text-muted d-block mt-1">Mengaktifkan mode ini akan memunculkan menu RDBMS di sidebar kiri.</small>
+                                                </div>
+                                                <form action="{{ route('dev-mode.toggle') }}" method="POST" class="m-0">
+                                                    @csrf
+                                                    <div class="form-check form-switch m-0" style="transform: scale(1.5); margin-right: 20px !important;">
+                                                        <input class="form-check-input cursor-pointer shadow-sm border-danger" type="checkbox" role="switch" name="dev_mode" onchange="this.form.submit()" {{ Auth::user()->is_dev_mode ? 'checked' : '' }}>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
                                 </div>
 
                                 <div class="mt-5 pt-4 border-top">

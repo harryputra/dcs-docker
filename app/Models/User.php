@@ -25,7 +25,8 @@ class User extends Authenticatable implements RbacUserInterface
         'email',
         'password',
         'photo',
-        'roles'
+        'roles',
+        'is_dev_mode'
     ];
 
     /**

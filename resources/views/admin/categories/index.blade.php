@@ -4,14 +4,16 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="card">
-            <div class="card-body">
+        <div class="card shadow-sm border-0 border-start border-4 border-info rounded-4">
+            <div class="card-body p-4">
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center">
                             <div>
-                                <h2 class="mb-2">Kategori Dokumen</h2>
-                                <x-breadcrumb :breadcrumbs="[['title' => 'Kategori Dokumen', 'url' => route('categories.index')]]" />
+                                <h3 class="fw-bolder mb-1 text-dark d-flex align-items-center gap-2">
+                                    <i class="ti ti-category text-info"></i> Kategori Dokumen
+                                </h3>
+                                <p class="text-muted small mb-0">Kelola daftar klasifikasi dan penomoran dokumen sistem.</p>
                             </div>
                         </div>
 
@@ -25,39 +27,45 @@
                             </a>
                         </div>
 
-                        <div class="mt-2 table-responsive">
+                        <div class="table-responsive">
                             <table id="myTable" class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th style="width: 30px;">
-                                            <input type="checkbox" id="selectAll" class="form-check-input">
+                                        <th style="width: 40px;" class="text-uppercase text-muted fw-bold fs-2 border-bottom-0 pb-3">
+                                            <input type="checkbox" id="selectAll" class="form-check-input rounded border-secondary fs-4 shadow-sm cursor-pointer">
                                         </th>
-                                        <th style="width: 50px;">No</th>
-                                        <th>Kode Kategori</th>
-                                        <th>Kategori</th>
-                                        <th style="width: 100px;">Aksi</th>
+                                        <th style="width: 60px;" class="text-uppercase text-muted fw-bold fs-2 border-bottom-0 pb-3">No</th>
+                                        <th class="text-uppercase text-muted fw-bold fs-2 border-bottom-0 pb-3">Kode Kategori</th>
+                                        <th class="text-uppercase text-muted fw-bold fs-2 border-bottom-0 pb-3">Nama Kategori</th>
+                                        <th style="width: 120px;" class="text-uppercase text-muted fw-bold fs-2 border-bottom-0 pb-3 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($categories as $category)
-                                        <tr>
+                                        <tr class="transition-all">
                                             <td>
-                                                <input type="checkbox" class="form-check-input row-checkbox"
+                                                <input type="checkbox" class="form-check-input row-checkbox rounded border-secondary shadow-sm cursor-pointer"
                                                     value="{{ $category->id }}" data-id="{{ $category->id }}">
                                             </td>
-                                            <td>{{ $category->id }}</td>
-                                            <td>{{ $category->code }}</td>
-                                            <td>{{ $category->name }}</td>
+                                            <td class="fw-bold text-dark fs-3">{{ $category->id }}</td>
                                             <td>
-                                                <a href="{{ route('categories.edit', $category) }}"
-                                                    class="btn btn-sm btn-admin" title="Edit Kategori">
-                                                    <i class="ti ti-edit"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-danger" title="Hapus Kategori"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteCategoryModal{{ $category->id }}">
-                                                    <i class="ti ti-trash"></i>
-                                                </button>
+                                                <span class="badge bg-light text-dark-emphasis border border-secondary-subtle px-3 py-1 rounded-pill fw-semibold">{{ $category->code }}</span>
+                                            </td>
+                                            <td class="fw-bold text-dark fs-4">
+                                                {{ $category->name }}
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="gap-2 d-flex justify-content-center">
+                                                    <a href="{{ route('categories.edit', $category) }}"
+                                                        class="btn btn-primary-light btn-icon rounded-3" title="Edit Kategori">
+                                                        <i class="ti ti-edit fs-5"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-danger-light btn-icon rounded-3" title="Hapus Kategori"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#deleteCategoryModal{{ $category->id }}">
+                                                        <i class="ti ti-trash fs-5"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
 
@@ -170,6 +178,22 @@
         .input-group-modern input { border: none !important; box-shadow: none !important; padding: 10px 15px; }
         .input-group-modern:focus-within { border-color: #14b8a6; box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1); }
         .table-hover tbody tr:hover { background-color: #f8fafc; }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s ease;
+        }
+        .btn-icon:hover { transform: translateY(-2px); }
+        .btn-primary-light { background: #e0f2fe; color: #0284c7; border: none; }
+        .btn-primary-light:hover { background: #bae6fd; color: #0369a1; }
+        .btn-danger-light { background: #fee2e2; color: #dc2626; border: none; }
+        .btn-danger-light:hover { background: #fecaca; color: #b91c1c; }
+        .transition-all { transition: all 0.2s ease; }
     </style>
 
     <script>

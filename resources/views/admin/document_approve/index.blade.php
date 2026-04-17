@@ -64,8 +64,17 @@
         </div>
 
         <!-- Approval Matrix -->
-        <div class="border-0 shadow-sm card rounded-4 overflow-hidden">
-            <div class="p-4 card-body">
+        <div class="card shadow-sm border-0 border-start border-4 border-info rounded-4">
+            <div class="card-body p-4">
+                <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bolder mb-1 text-dark d-flex align-items-center gap-2">
+                            <i class="ti ti-stamp text-info"></i> Daftar Pengesahan Dokumen
+                        </h3>
+                        <p class="text-muted small mb-0">Antrean persetujuan, peninjauan, dan pengesahan akhir dokumen.</p>
+                    </div>
+                </div>
+                
                 <!-- Unified Filter Actions -->
                 <div class="mb-4 row g-3 align-items-center">
                     <div class="col-md-6">

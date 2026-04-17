@@ -2,93 +2,118 @@
 @section('title', __('rbac::users.users'))
 @section('content')
     <div class="container-fluid">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="card shadow-sm border-0 border-start border-4 border-info">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h2 class="mb-2">Users</h2>
-                        <x-breadcrumb :breadcrumbs="[['title' => 'Users', 'url' => route('list_users')]]" />
+                        <h3 class="fw-bolder mb-1 text-dark">Manajemen Akses Pengguna</h3>
+                        <p class="text-muted small mb-0">Kelola akun pengguna, email, dan penugasan role sistem.</p>
                     </div>
                 </div>
 
-                <div class="mb-3 d-flex justify-content-between align-items-center">
+                <div class="mb-4 d-flex justify-content-between align-items-center bg-light p-3 rounded-3">
                     <div>
-                        <button id="deleteSelectedBtn" class="btn btn-danger" style="display: none;">
+                        <button id="deleteSelectedBtn" class="btn btn-danger d-flex align-items-center gap-2 shadow-sm" style="display: none;">
                             <i class="ti ti-trash"></i> Hapus Dipilih (<span id="selectedCount">0</span>)
                         </button>
                     </div>
-                    <a href="{{ route('create_users') }}" class="btn btn-admin">
-                        <i class="ti ti-user-plus"></i> Create User
+                    <a href="{{ route('create_users') }}" class="btn btn-info d-flex align-items-center gap-2 shadow-sm px-4">
+                        <i class="ti ti-user-plus"></i> Tambah Pengguna Baru
                     </a>
                 </div>
 
                 @if ($errors->has('items'))
-                    <div class="alert alert-danger" role="alert">
-                        {{ $errors->first('items') }}
+                    <div class="alert alert-danger bg-danger-subtle text-danger border-0 d-flex align-items-center" role="alert">
+                        <i class="ti ti-alert-circle me-2"></i> {{ $errors->first('items') }}
                     </div>
                 @endif
 
                 <form id="delete-form" action="{{ route('delete_user') }}" method="POST">
                     @csrf
-                    <div class="table-responsive">
-                        <table id="myTable" class="table table-hover" style="width:100%">
-                            <thead>
+                    <div class="table-responsive bg-white rounded-3 border">
+                        <table id="myTable" class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light text-muted">
                                 <tr>
-                                    <th style="width: 30px;">
+                                    <th style="width: 40px;" class="text-center border-bottom-0">
                                         <input type="checkbox" id="selectAll" class="form-check-input">
                                     </th>
-                                    <th style="width: 50px;">No</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Roles</th>
-                                    <th>Created</th>
-                                    <th style="width: 120px;">Actions</th>
+                                    <th style="width: 50px;" class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">No</th>
+                                    <th class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px; width: 250px;">Nama Pengguna</th>
+                                    <th class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px; width: 200px;">Email</th>
+                                    <th class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">Roles Ditugaskan</th>
+                                    <th style="width: 140px;" class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">Waktu Register</th>
+                                    <th style="width: 110px;" class="text-center fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="border-top-0">
                                 @foreach ($dataProvider->get() as $key => $user)
                                     <tr>
-                                        <td>
+                                        <td class="text-center">
                                             @if (Gate::allows(\Itstructure\LaRbac\Models\Permission::DELETE_MEMBER_FLAG, $user->memberKey) &&
                                                     auth()->user()->memberKey != $user->memberKey)
                                                 <input type="checkbox" name="items[]" value="{{ $user->memberKey }}"
-                                                    class="form-check-input row-checkbox">
+                                                    class="form-check-input row-checkbox cursor-pointer">
                                             @endif
                                         </td>
-                                        <td>{{ $key + 1 }}</td>
+                                        <td class="text-muted fw-semibold small">{{ $key + 1 }}</td>
                                         <td>
-                                            <a href="{{ route('show_user', ['id' => $user->memberKey]) }}">
-                                                {{ $user->memberName }}
-                                            </a>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="bg-info-subtle text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                                    <i class="ti ti-user fs-5"></i>
+                                                </div>
+                                                <a href="{{ route('show_user', ['id' => $user->memberKey]) }}" class="text-dark fw-bold text-decoration-none" style="font-size: 14px;">
+                                                    {{ $user->memberName }}
+                                                </a>
+                                            </div>
                                         </td>
-                                        <td>{{ $user->email }}</td>
                                         <td>
-                                            <ul class="list-group list-group-flush">
-                                                @foreach ($user->roles as $role)
-                                                    <li class="p-2 list-group-item">
-                                                        <a href="{{ route('show_role', ['id' => $role->id]) }}">
-                                                            {{ $role->name }}
-                                                        </a>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
+                                            <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 13px;">
+                                                <i class="ti ti-mail"></i> {{ $user->email ?: '-' }}
+                                            </div>
                                         </td>
-                                        <td>{{ $user->created_at }}</td>
                                         <td>
-                                            <div class="gap-1 d-flex">
+                                            @php
+                                                $roles = collect($user->roles);
+                                                $displayCount = 3;
+                                                $displayed = $roles->take($displayCount);
+                                                $hiddenCount = $roles->count() - $displayCount;
+                                            @endphp
+                                            <div class="d-flex flex-wrap gap-1 align-items-center">
+                                                @forelse ($displayed as $role)
+                                                    <a href="{{ route('show_role', ['id' => $role->id]) }}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-decoration-none px-2 py-1 transition-hover fw-normal" style="font-size: 11px;">
+                                                        <i class="ti ti-shield-check fs-9 me-1"></i> {{ $role->name }}
+                                                    </a>
+                                                @empty
+                                                    <span class="text-muted small border px-2 py-1 rounded bg-light border-dashed" style="font-size: 11px;"><i class="ti ti-ban"></i> Belum ada role</span>
+                                                @endforelse
+                                                
+                                                @if($hiddenCount > 0)
+                                                    <span class="badge bg-light text-dark border px-2 py-1 fw-medium cursor-pointer" style="font-size: 11px;" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $roles->slice($displayCount)->pluck('name')->implode(', ') }}">
+                                                        +{{ $hiddenCount }} lainnya
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="text-muted text-nowrap" style="font-size: 13px;">
+                                            <div class="d-flex align-items-center gap-1">
+                                                <i class="ti ti-clock fs-5"></i> {{ \Carbon\Carbon::parse($user->created_at)->format('d M Y, H:i') }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-center gap-1">
                                                 <a href="{{ route('show_user', ['id' => $user->memberKey]) }}"
-                                                    class="btn btn-sm btn-admin" title="Lihat Detail">
-                                                    <i class="ti ti-eye"></i>
+                                                    class="btn btn-sm btn-light-info text-info shadow-none border-0 px-2" title="Lihat Detail">
+                                                    <i class="ti ti-eye fs-5"></i>
                                                 </a>
                                                 <a href="{{ route('edit_user', ['id' => $user->memberKey]) }}"
-                                                    class="btn btn-sm btn-approver" title="Edit User">
-                                                    <i class="ti ti-edit"></i>
+                                                    class="btn btn-sm btn-light-warning text-warning shadow-none border-0 px-2" title="Edit User">
+                                                    <i class="ti ti-edit fs-5"></i>
                                                 </a>
                                                 @if (auth()->user()->memberKey != $user->memberKey)
-                                                    <button type="button" class="btn btn-sm btn-danger" title="Hapus User"
+                                                    <button type="button" class="btn btn-sm btn-light-danger text-danger shadow-none border-0 px-2" title="Hapus User"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#deleteUserModal{{ $user->memberKey }}">
-                                                        <i class="ti ti-trash"></i>
+                                                        <i class="ti ti-trash fs-5"></i>
                                                     </button>
                                                 @endif
                                             </div>

@@ -43,6 +43,12 @@
         // Run on load
         initiateModernSelects();
 
+        // Initialize Bootstrap Data Tooltips Globally
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
         // Re-run when Bootstrap modals are shown (to fix parent issues)
         $(document).on('shown.bs.modal', function() {
             initiateModernSelects();

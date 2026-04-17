@@ -58,12 +58,17 @@
         </div>
 
         <!-- Audit Matrix -->
-        <div class="border-0 shadow-sm card rounded-4">
-            <div class="p-4 card-body">
+        <div class="card shadow-sm border-0 border-start border-4 border-info rounded-4">
+            <div class="card-body p-4">
                 <!-- Header Actions -->
-                <div class="mb-4 d-flex align-items-center justify-content-between">
-                    <h5 class="mb-0 fw-bold text-dark">Log Kronologis</h5>
-                    <div class="gap-3 d-flex align-items-center">
+                <div class="mb-4 pb-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <h3 class="fw-bolder mb-1 text-dark d-flex align-items-center gap-2">
+                            <i class="ti ti-timeline text-info"></i> Log Kronologis
+                        </h3>
+                        <p class="text-muted small mb-0">Matriks data aktivitas histori dokumen di seluruh penjuru sistem.</p>
+                    </div>
+                    <div>
                         <div class="input-group input-group-modern shadow-sm" style="min-width: 300px;">
                             <span class="bg-white border-end-0 input-group-text"><i class="ti ti-search text-muted"></i></span>
                             <input type="text" id="customSearch" class="bg-white border-start-0 form-control fs-3" placeholder="Pencarian audit...">

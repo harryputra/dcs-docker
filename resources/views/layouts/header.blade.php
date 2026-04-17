@@ -156,6 +156,22 @@
                                 </a>
                             </li>
                         @endcan
+                        
+                        @if(Auth::check() && Auth::user()->isRole('Administrator') && Auth::user()->is_dev_mode)
+                            <li class="nav-small-cap mt-3">
+                                <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                                <span class="hide-menu text-danger fw-bold">DEV MODE</span>
+                            </li>
+                            <li class="sidebar-item mb-3">
+                                <a class="sidebar-link text-danger border border-danger-subtle rounded-3 bg-danger-subtle" href="{{ route('db.index') }}" aria-expanded="false">
+                                    <span>
+                                        <i class="ti ti-database"></i>
+                                    </span>
+                                    <span class="hide-menu fw-bold">Database Manager</span>
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-small-cap">
                             <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
                             <span class="hide-menu">AUTH</span>
@@ -269,6 +285,20 @@
                                             <i class="ti ti-user fs-6"></i>
                                             <p class="mb-0 fs-3">My Profile</p>
                                         </a>
+                                        @if(Auth::check() && Auth::user()->isRole('Administrator'))
+                                        <div class="px-3 py-2 border-top border-bottom bg-light">
+                                            <form action="{{ route('dev-mode.toggle') }}" method="POST" class="d-flex align-items-center justify-content-between m-0">
+                                                @csrf
+                                                <div class="d-flex align-items-center gap-2 text-danger">
+                                                    <i class="ti ti-code fs-6"></i>
+                                                    <p class="mb-0 fs-3 fw-bold">Dev Mode</p>
+                                                </div>
+                                                <div class="form-check form-switch m-0">
+                                                    <input class="form-check-input text-danger cursor-pointer" type="checkbox" role="switch" id="devModeSwitch" name="dev_mode" onchange="this.form.submit()" {{ Auth::user()->is_dev_mode ? 'checked' : '' }}>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        @endif
                                         <a href="javascript:void(0)"
                                             class="d-flex align-items-center gap-2 dropdown-item">
                                             <i class="ti ti-mail fs-6"></i>

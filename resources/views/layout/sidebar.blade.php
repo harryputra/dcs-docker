@@ -84,6 +84,20 @@
                         <span class="hide-menu">Permission</span>
                     </a>
                 </li>
+                @if(Auth::check() && Auth::user()->isRole('Administrator') && Auth::user()->is_dev_mode)
+                    <li class="nav-small-cap">
+                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                        <span class="hide-menu text-danger">DEV MODE</span>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link text-danger" href="{{ route('db.index') }}" aria-expanded="false">
+                            <span>
+                                <i class="ti ti-database"></i>
+                            </span>
+                            <span class="hide-menu fw-bold">Database Manager</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
         </nav>
         <!-- End Sidebar navigation -->

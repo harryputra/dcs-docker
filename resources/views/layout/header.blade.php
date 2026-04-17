@@ -26,6 +26,20 @@
                                 <i class="ti ti-user fs-6"></i>
                                 <p class="mb-0 fs-3">My Profile</p>
                             </a>
+                            @if(Auth::check() && Auth::user()->isRole('Administrator'))
+                            <div class="px-3 py-2 border-top border-bottom bg-light">
+                                <form action="{{ route('dev-mode.toggle') }}" method="POST" class="d-flex align-items-center justify-content-between m-0">
+                                    @csrf
+                                    <div class="d-flex align-items-center gap-2 text-danger">
+                                        <i class="ti ti-code fs-6"></i>
+                                        <p class="mb-0 fs-3 fw-bold">Dev Mode</p>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input text-danger cursor-pointer" type="checkbox" role="switch" id="devModeSwitch" name="dev_mode" onchange="this.form.submit()" {{ Auth::user()->is_dev_mode ? 'checked' : '' }}>
+                                    </div>
+                                </form>
+                            </div>
+                            @endif
                             <form action="{{ route('logout') }}" method="POST" class="mx-3 mt-2">
                                 @csrf
                                 <button type="submit" class="btn btn-outline-primary w-100">Logout</button>

@@ -114,4 +114,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/view/dokumen/{filename}', [DocumentController::class, 'viewFile'])->name('document_revision.view-file')->middleware('can:view-documents');
     Route::post('/document/preview/{revision}', [DocumentController::class, 'previewFileByID'])->name('document.preview')->middleware('can:view-documents');
     Route::get('/documents_category', [DocumentController::class, 'getDocByCategory'])->name('document.getByCategory')->middleware('can:view-documents');
+
+    // DEV MODE & DATABASE MANAGER (Requires Administrator Role)
+    Route::post('/dev-mode/toggle', [\App\Http\Controllers\DevModeController::class, 'toggle'])->name('dev-mode.toggle');
+    Route::get('/database-manager', [\App\Http\Controllers\DatabaseManagerController::class, 'index'])->name('db.index');
+    Route::get('/database-manager/{table}', [\App\Http\Controllers\DatabaseManagerController::class, 'show'])->name('db.show');
+    Route::get('/database-manager/{table}/create', [\App\Http\Controllers\DatabaseManagerController::class, 'create'])->name('db.create');
+    Route::post('/database-manager/{table}', [\App\Http\Controllers\DatabaseManagerController::class, 'store'])->name('db.store');
+    Route::get('/database-manager/{table}/{id}/edit', [\App\Http\Controllers\DatabaseManagerController::class, 'edit'])->name('db.edit');
+    Route::put('/database-manager/{table}/{id}', [\App\Http\Controllers\DatabaseManagerController::class, 'update'])->name('db.update');
+    Route::delete('/database-manager/{table}/{id}', [\App\Http\Controllers\DatabaseManagerController::class, 'destroy'])->name('db.destroy');
 });

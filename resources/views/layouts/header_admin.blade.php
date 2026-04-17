@@ -238,6 +238,19 @@
                             </li>
                         @endcan
 
+                        @if(Auth::check() && Auth::user()->isRole('Administrator') && Auth::user()->is_dev_mode)
+                            <li class="nav-small-cap mt-4">
+                                <span class="hide-menu fw-bolder text-uppercase text-danger letter-spacing-1">Developer Tools</span>
+                            </li>
+                            <li class="sidebar-item">
+                                @php $isDb = Str::contains(request()->url(), 'database-manager'); @endphp
+                                <a class="sidebar-link rounded-3 text-danger {{ $isDb ? 'bg-danger-subtle border-danger' : '' }}" href="{{ route('db.index') }}">
+                                    <i class="ti ti-database fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Database Manager</span>
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-small-cap mt-4">
                             <span class="hide-menu fw-bolder text-uppercase text-muted letter-spacing-1">Action</span>
                         </li>

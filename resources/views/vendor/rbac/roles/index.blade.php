@@ -2,95 +2,121 @@
 @section('title', __('rbac::roles.roles'))
 @section('content')
     <div class="container-fluid">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="card shadow-sm border-0 border-start border-4 border-primary">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h2 class="mb-2">Roles</h2>
-                        <x-breadcrumb :breadcrumbs="[['title' => 'Roles', 'url' => route('list_roles')]]" />
+                        <h3 class="fw-bolder mb-1 text-dark">Manajemen Hak Akses (Roles)</h3>
+                        <p class="text-muted small mb-0">Kelola peran administrator dan akses fungsional sistem.</p>
                     </div>
                 </div>
 
-                <div class="mb-3 d-flex justify-content-between align-items-center">
+                <div class="mb-4 d-flex justify-content-between align-items-center bg-light p-3 rounded-3">
                     <div>
-                        <button id="deleteSelectedBtn" class="btn btn-danger" style="display: none;">
+                        <button id="deleteSelectedBtn" class="btn btn-danger d-flex align-items-center gap-2" style="display: none;">
                             <i class="ti ti-trash"></i> Hapus Dipilih (<span id="selectedCount">0</span>)
                         </button>
                     </div>
-                    <a class="btn btn-admin" href="{{ route('create_role') }}">
-                        <i class="ti ti-plus"></i> {!! __('rbac::roles.create_role') !!}
+                    <a class="btn btn-primary d-flex align-items-center gap-2 px-4 shadow-sm" href="{{ route('create_role') }}">
+                        <i class="ti ti-plus"></i> Buat Role Baru
                     </a>
                 </div>
 
                 @if ($errors->has('items'))
-                    <div class="alert alert-danger" role="alert">
-                        {{ $errors->first('items') }}
+                    <div class="alert alert-danger bg-danger-subtle text-danger border-0 d-flex align-items-center" role="alert">
+                        <i class="ti ti-alert-circle me-2"></i> {{ $errors->first('items') }}
                     </div>
                 @endif
 
                 <form id="delete-form" action="{{ route('delete_role') }}" method="POST">
                     @csrf
-                    <div class="table-responsive">
-                        <table id="myTable" class="table table-hover" style="width:100%">
-                            <thead>
+                    <div class="table-responsive bg-white rounded-3 border">
+                        <table id="myTable" class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light text-muted">
                                 <tr>
-                                    <th style="width: 30px;">
+                                    <th style="width: 40px;" class="text-center border-bottom-0">
                                         <input type="checkbox" id="selectAll" class="form-check-input">
                                     </th>
-                                    <th style="width: 50px;">No</th>
-                                    <th>Name</th>
-                                    <th>Slug</th>
-                                    <th>Description</th>
-                                    <th>Permission</th>
-                                    <th>Created</th>
-                                    <th style="width: 120px;">Actions</th>
+                                    <th style="width: 50px;" class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">No</th>
+                                    <th class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px; width: 200px;">Nama Role</th>
+                                    <th class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px; width: 150px;">Kode Sistem</th>
+                                    <th class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px; width: 200px;">Deskripsi</th>
+                                    <th class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">Otoritas Akses</th>
+                                    <th style="width: 130px;" class="fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">Dibuat</th>
+                                    <th style="width: 110px;" class="text-center fw-bolder text-uppercase border-bottom-0" style="font-size: 11px;">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="border-top-0">
                                 @foreach ($dataProvider->get() as $key => $role)
                                     <tr>
-                                        <td>
+                                        <td class="text-center">
                                             <input type="checkbox" name="items[]" value="{{ $role->id }}"
-                                                class="form-check-input row-checkbox">
+                                                class="form-check-input row-checkbox cursor-pointer">
                                         </td>
-                                        <td>{{ $key + 1 }}</td>
+                                        <td class="text-muted fw-semibold small">{{ $key + 1 }}</td>
                                         <td>
-                                            <a href="{{ route('show_role', ['id' => $role->id]) }}">
-                                                {{ $role->name }}
-                                            </a>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="bg-primary-subtle text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                    <i class="ti ti-shield-check fs-5"></i>
+                                                </div>
+                                                <a href="{{ route('show_role', ['id' => $role->id]) }}" class="text-dark fw-bold text-decoration-none" style="font-size: 14px;">
+                                                    {{ $role->name }}
+                                                </a>
+                                            </div>
                                         </td>
-                                        <td>{{ $role->slug }}</td>
-                                        <td>{{ $role->description }}</td>
+                                        <td><span class="badge bg-light text-muted border px-2 py-1" style="font-size: 12px; font-weight: 500;">{{ $role->slug }}</span></td>
                                         <td>
-                                            <ul class="list-group list-group-flush">
-                                                @foreach ($role->permissions as $permission)
-                                                    <li class="p-2 list-group-item">
-                                                        <a href="{{ route('show_permission', ['id' => $permission->id]) }}">
-                                                            {{ $permission->name }}
-                                                        </a>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
+                                            <div class="text-muted text-break" style="font-size: 13px; line-height: 1.4;">
+                                                {{ $role->description ?: '-' }}
+                                            </div>
                                         </td>
-                                        <td>{{ $role->created_at }}</td>
                                         <td>
-                                            <div class="d-flex gap-1">
+                                            @php
+                                                $permissions = collect($role->permissions);
+                                                $displayCount = 3;
+                                                $displayed = $permissions->take($displayCount);
+                                                $hiddenCount = $permissions->count() - $displayCount;
+                                            @endphp
+                                            <div class="d-flex flex-wrap gap-1 align-items-center">
+                                                @forelse ($displayed as $permission)
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-normal" style="font-size: 11px;">
+                                                        {{ $permission->name }}
+                                                    </span>
+                                                @empty
+                                                    <span class="text-muted small border px-2 py-1 rounded bg-light border-dashed" style="font-size: 11px;"><i class="ti ti-ban"></i> Belum ada izin</span>
+                                                @endforelse
+                                                
+                                                @if($hiddenCount > 0)
+                                                    <span class="badge bg-light text-dark border px-2 py-1 fw-medium cursor-pointer" style="font-size: 11px;" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $permissions->slice($displayCount)->pluck('name')->implode(', ') }}">
+                                                        +{{ $hiddenCount }} lainnya
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="text-muted text-nowrap" style="font-size: 13px;">
+                                            <div class="d-flex align-items-center gap-1">
+                                                <i class="ti ti-calendar fs-5"></i> {{ \Carbon\Carbon::parse($role->created_at)->format('d M Y') }}
+                                            </div>
+                                        </td>
+                                        <td class="text-nowrap text-center">
+                                            <div class="d-flex justify-content-center gap-1">
                                                 <a href="{{ route('show_role', ['id' => $role->id]) }}"
-                                                    class="btn btn-sm btn-admin" title="Lihat Detail">
-                                                    <i class="ti ti-eye"></i>
+                                                    class="btn btn-sm btn-light-primary text-primary shadow-none border-0 px-2" title="Lihat Detail">
+                                                    <i class="ti ti-eye fs-5"></i>
                                                 </a>
                                                 <a href="{{ route('edit_role', ['role' => $role->id]) }}"
-                                                    class="btn btn-sm btn-approver" title="Edit Role">
-                                                    <i class="ti ti-edit"></i>
+                                                    class="btn btn-sm btn-light-warning text-warning shadow-none border-0 px-2" title="Edit Role">
+                                                    <i class="ti ti-edit fs-5"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-danger" title="Hapus Role"
+                                                <button type="button" class="btn btn-sm btn-light-danger text-danger shadow-none border-0 px-2" title="Hapus Role"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#deleteRoleModal{{ $role->id }}">
-                                                    <i class="ti ti-trash"></i>
+                                                    <i class="ti ti-trash fs-5"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
+
 
                                     {{-- Modal Delete Role --}}
                                     <div class="modal fade" id="deleteRoleModal{{ $role->id }}" tabindex="-1"

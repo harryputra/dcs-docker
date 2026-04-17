@@ -106,8 +106,16 @@
         </div>
 
         <!-- Document Matrix Table -->
-        <div class="border-0 shadow-sm card rounded-4">
-            <div class="p-4 card-body">
+        <div class="card shadow-sm border-0 border-start border-4 border-info rounded-4">
+            <div class="card-body p-4">
+                <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bolder mb-1 text-dark d-flex align-items-center gap-2">
+                            <i class="ti ti-file-certificate text-info"></i> Daftar Dokumen Aktif
+                        </h3>
+                        <p class="text-muted small mb-0">Matriks komprehensif dokumen elektronik yang valid.</p>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="tableDocument">
                         <thead>
@@ -261,11 +269,13 @@
             align-items: center;
             justify-content: center;
             padding: 0;
+            transition: all 0.2s ease;
         }
+        .btn-icon:hover { transform: translateY(-2px); }
         .btn-primary-light { background: #e0f2fe; color: #0284c7; border: none; }
-        .btn-primary-light:hover { background: #0284c7; color: white; }
+        .btn-primary-light:hover { background: #bae6fd; color: #0369a1; }
         .btn-warning-light { background: #fef3c7; color: #d97706; border: none; }
-        .btn-warning-light:hover { background: #d97706; color: white; }
+        .btn-warning-light:hover { background: #fde68a; color: #b45309; }
         
         .transition-all { transition: all 0.2s ease; }
         #tableDocument tbody tr:hover {

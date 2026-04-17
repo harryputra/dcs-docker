@@ -7,8 +7,19 @@
         <!-- Dashboard Hero Section -->
         <div class="mb-5 row">
             <div class="col-12">
-                <div class="border-0 shadow-sm card bg-success-subtle rounded-3 overflow-hidden position-relative">
-                    <div class="p-5 card-body z-1 position-relative">
+                <div class="border-0 shadow-sm card bg-success-subtle rounded-3 overflow-hidden position-relative" style="min-height: 240px;">
+                    <!-- Medical Pulse Decoration -->
+                    <div class="position-absolute bottom-0 start-0 w-100 opacity-10" style="z-index: 0;">
+                        <svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg">
+                            <path class="pulse-line" d="M0 50 L100 50 L120 20 L140 80 L160 50 L300 50 L320 10 L340 90 L360 50 L1000 50" stroke="#198754" stroke-width="2" fill="none" />
+                        </svg>
+                    </div>
+
+                    <!-- Hero Illustration Background (Separated Stacking Context) -->
+                    <img src="{{ asset('assets/images/backgrounds/medical_dashboard_hero.png') }}" alt="Hero Illustration" class="img-fluid position-absolute d-none d-md-block top-50 translate-middle-y end-0 pe-5" style="max-height: 220px; opacity: 1; mix-blend-mode: multiply; filter: contrast(1.1); z-index: 0; pointer-events: none;">
+
+                    <!-- Hero Content -->
+                    <div class="p-5 card-body position-relative" style="z-index: 1;">
                         <div class="row align-items-center">
                             <div class="col-md-7">
                                 <h1 class="mb-2 display-6 fw-bolder text-dark">
@@ -35,16 +46,7 @@
                                     @endforeach
                                 </div>
                             </div>
-                            <div class="col-md-5 d-none d-md-block text-end">
-                                <img src="{{ asset('assets/images/backgrounds/medical_dashboard_hero.png') }}" alt="Medical Dashboard" class="img-fluid" style="max-height: 220px; opacity: 1;">
-                            </div>
                         </div>
-                    </div>
-                    <!-- Medical Pulse Decoration -->
-                    <div class="position-absolute bottom-0 start-0 w-100 opacity-10">
-                        <svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg">
-                            <path class="pulse-line" d="M0 50 L100 50 L120 20 L140 80 L160 50 L300 50 L320 10 L340 90 L360 50 L1000 50" stroke="#198754" stroke-width="2" fill="none" />
-                        </svg>
                     </div>
                 </div>
             </div>
