@@ -14,13 +14,25 @@ use App\Http\Controllers\CustomPermissionController;
 use App\Notifications\NewUserPasswordChange;
 
 Route::get('/', function () {
-    return redirect('/login');
+    // Dynamic counters for landing page
+    $dokumenAktif = \App\Models\Document::where('is_active', true)->count();
+    $kategori = \App\Models\Category::count();
+    $aktivitas = \App\Models\DocumentHistory::count();
+    
+    return view('welcome', compact('dokumenAktif', 'kategori', 'aktivitas'));
 });
 
 Route::get('/dashboards', function () {
     return view('admin.dashboard');
 });
 
+// Interceptor for 419 Page Expired back-button loops
+Route::get('/logout', function () {
+    auth()->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+});
 
 // ================================ BE ROUTE =============================
 
@@ -124,4 +136,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/database-manager/{table}/{id}/edit', [\App\Http\Controllers\DatabaseManagerController::class, 'edit'])->name('db.edit');
     Route::put('/database-manager/{table}/{id}', [\App\Http\Controllers\DatabaseManagerController::class, 'update'])->name('db.update');
     Route::delete('/database-manager/{table}/{id}', [\App\Http\Controllers\DatabaseManagerController::class, 'destroy'])->name('db.destroy');
+
+    // Document Task Routes
+    Route::get('/document-tasks', [\App\Http\Controllers\DocumentTaskController::class, 'index'])->name('document-tasks.index');
+    Route::post('/document-tasks', [\App\Http\Controllers\DocumentTaskController::class, 'store'])->name('document-tasks.store')->middleware('can:create-tasks');
+    Route::put('/document-tasks/{task}/status', [\App\Http\Controllers\DocumentTaskController::class, 'updateStatus'])->name('document-tasks.update-status');
 });

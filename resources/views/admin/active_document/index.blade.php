@@ -168,11 +168,19 @@
                                             </a>
                                             @if (!empty(array_intersect(['administrator', 'bagian-mutu', 'pengendali-dokumen', 'kepala-puskesmas'], $userRoles)) &&
                                                   $document->latestRevision->status === 'Disetujui' && $document->is_active)
-                                                <button type="button" class="btn btn-warning-light btn-icon rounded-3" 
-                                                    data-bs-toggle="modal" data-bs-target="#modalTolak"
-                                                    data-id="{{ $document->currentRevision->id }}" title="Revisi Dokumen">
-                                                    <i class="ti ti-refresh fs-5"></i>
-                                                </button>
+                                                @if(in_array('kepala-puskesmas', $userRoles))
+                                                    <button type="button" class="btn btn-warning-light btn-icon rounded-3" 
+                                                        data-bs-toggle="modal" data-bs-target="#modalAddTask"
+                                                        data-id="{{ $document->id }}" data-code="{{ $document->code }}" data-title="{{ $document->title }}" title="Tugaskan Revisi">
+                                                        <i class="ti ti-clipboard-list fs-5"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-warning-light btn-icon rounded-3" 
+                                                        data-bs-toggle="modal" data-bs-target="#modalTolak"
+                                                        data-id="{{ $document->currentRevision->id }}" title="Revisi Dokumen">
+                                                        <i class="ti ti-refresh fs-5"></i>
+                                                    </button>
+                                                @endif
                                             @endif
                                         </div>
                                     </td>
@@ -185,7 +193,7 @@
         </div>
     </div>
 
-    <!-- Professional Revision Modal -->
+    <!-- Professional Revision Modal (Direct REJECT Form) -->
     <div class="modal fade" id="modalTolak" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="border-0 shadow-lg modal-content rounded-4">
@@ -217,6 +225,61 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Add Task (Penugasan Formal) -->
+    <div class="modal fade" id="modalAddTask" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="border-0 shadow-lg modal-content rounded-4 overflow-hidden">
+                <div class="p-4 modal-header border-0 bg-teal-subtle d-flex align-items-center">
+                    <div class="p-2 bg-teal text-white rounded-3 me-3"><i class="ti ti-clipboard-plus fs-6"></i></div>
+                    <h5 class="mb-0 modal-title fw-bold text-teal">Buat Penugasan Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="p-4 modal-body">
+                    <form id="formAddTask" action="{{ route('document-tasks.store') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="mb-2 form-label fw-bold small text-muted">JUDUL PENUGASAN <span class="text-danger">*</span></label>
+                            <input type="text" id="task_title_input" name="title" class="form-control rounded-3" placeholder="Contoh: Revisi SOP Alur Pendaftaran" required>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <div class="col-md-6">
+                                <label class="mb-2 form-label fw-bold small text-muted">TIPE TUGAS <span class="text-danger">*</span></label>
+                                <select name="task_type" id="task_type_select" class="form-select rounded-3" required>
+                                    <option value="Revisi">Revisi Dokumen</option>
+                                    <option value="Baru">Dokumen Baru</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="mb-2 form-label fw-bold small text-muted">TARGET ROLE <span class="text-danger">*</span></label>
+                                <select name="target_role_id" class="form-select rounded-3" required>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="doc_selection_container">
+                            <label class="mb-2 form-label fw-bold small text-muted">DOKUMEN REFERENSI <span class="text-danger">*</span></label>
+                            <input type="text" id="ref_doc_display" class="form-control rounded-3 bg-light" readonly>
+                            <input type="hidden" id="ref_doc_id" name="document_id">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="mb-2 form-label fw-bold small text-muted">INSTRUKSI PENUGASAN <span class="text-danger">*</span></label>
+                            <textarea class="form-control rounded-3" name="instruction" rows="4" placeholder="Tuliskan detail instruksi untuk pelaksana..." required></textarea>
+                        </div>
+                </div>
+                <div class="p-4 border-0 modal-footer bg-light d-flex justify-content-between">
+                    <button type="button" class="btn btn-white rounded-pill px-4 fw-bold shadow-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4 fw-bold shadow-sm">Kirim Penugasan</button>
+                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -300,6 +363,20 @@
                         document.getElementById('rev_judul_doc').innerText = title;
                         document.getElementById('rev_code_doc').innerText = code;
                         document.getElementById('formTolak').action = `/document_approval/${docId}`;
+                    });
+                }
+
+                const modalAddTask = document.getElementById('modalAddTask');
+                if (modalAddTask) {
+                    modalAddTask.addEventListener('show.bs.modal', function (event) {
+                        const button = event.relatedTarget;
+                        const docId = button.getAttribute('data-id');
+                        const docCode = button.getAttribute('data-code');
+                        const docTitle = button.getAttribute('data-title');
+                        
+                        document.getElementById('task_title_input').value = `Revisi: ${docTitle}`;
+                        document.getElementById('ref_doc_display').value = `${docCode} - ${docTitle}`;
+                        document.getElementById('ref_doc_id').value = docId;
                     });
                 }
             });

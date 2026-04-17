@@ -119,3 +119,37 @@ Untuk memudahkan identifikasi file di tingkat server, sistem menggunakan konvens
 - **Testing:**
   - **UI/UX Audit:** Memastikan proporsi resolusi visual dari semua 5 matriks halaman (Categories, Classifications, Active Docs, Revisions, dan Approvals) identik 100% menggunakan arsitektur Blade yang seragam.
   - **State Checking:** Menjamin seluruh fungsi DOM (*modals*, pratinjau) di setiap indeks tidak patah setelah migrasi atribut Class antarmuka.
+
+### [2026-04-17] Front-Facing Enterprise Portal (Dynamic Landing Page)
+- **Description:** Implementasi halaman portal penyambutan (Landing Page) publik yang estetik, representatif, dinamis, dan bertumpu pada standar SaaS modern, menggantikan logika *hard-redirect* ke login lama.
+- **Changes:**
+  - **Router Rewiring:** Mengganti rute root `/` pada `web.php` untuk merender `welcome.blade.php` sambil menginjeksi variabel analitik dinamis (total *Dokumen Aktif*, *Kategori*, dan lintasan *Log Audit*).
+  - **Hero & Glassmorphism UI:** Mendesain modul Hero Section bergradasi lembut (*teals/blues*) dengan aset abstraksi *blob-glassmorphism*, tipografi *Outfit/Inter* kustom, serta pemicu animasi AOS yang di-eksekusi secara asinkron.
+  - **Bento Grid Architecture:** Mengonversi daftar kapabilitas (*features*) sistem seperti Workflow Revisi, Enkripsi Anti-IDM, Audit Trail, dan Penomoran Cerdas ke dalam bentuk pilar arsitektur visual kotak *Bento-Card* modern.
+  - **Smart Authentication Handlers:** Komponen navigasi (`Navbar`) dan agregasi CTA (Call/Action Button) dibuat otomatis merefleksikan otorisasi status *session*—jika ada koneksi, tombol akan mengarahkan lurus ke dalam Dashboard.
+- **Testing:**
+  - **Responsive Matrix:** Mengonfirmasi penataan pilar Flex/Grid (*float cards* dan Bento) tidak tumpang tindih ketika diamati pada medium peramban *mobile* & *tablet*.
+  - **Data Binding:** Memastikan hitungan analitik pada kartu hero benar melacak relasi hitungan *database* (misalnya: counter rekaman Audit Matrix pada halaman beranda).
+
+### [2026-04-17] Zero-Cache Session Fortification (BFCache Block)
+- **Description:** Pencegahan kerentanan relikui layar akibat eksekusi lokal dari peramban, di mana pengguna yang baru log-out dapat melihat kembali data rahasia sebelumnya dengan menekan tombol "Back" (BFCache Engine).
+- **Changes:**
+  - **No-Cache Middleware (`PreventBackHistory`):** Menginjeksi *middleware* modifikasi HTTP Header secara global kepada semua respon `web` (mengatur atribut *Cache-Control: nocache, no-store, max-age=0*, *Pragma: no-cache*, dan menetapkan titik *Expires* ke penanggalan kedaluwarsa absolut (1990)).
+  - **Kernel Registration:** Mengarahkan middleware interseptor ke pusaran sentral `bootstrap/app.php` dengan metode `appendToGroup('web')`.
+  - **GET Interceptor Route (`/logout`):** Menguasakan rute GET statis pada `routes/web.php` untuk menangkap (*catch-all*) lalu lintas *Back-Button* dari *browser* yang mengirimkan paksa URL `/logout` yang sebelumnya hanya membuka protokol POST, mengeliminasi kemunculan layar Error "419 PAGE EXPIRED" akibat token CSRF membusuk *(expired)*.
+- **Testing:**
+  - **BFCache Kill-Switch Check:** Menguji skenario login dari akun manapun, masuk ke halaman dengan data terbatas, lalu menekan *"Keluar Sistem"* dan diakhiri dengan menembak tombol "Back" pada *browser*. Halaman akan memuat secara hampa dan peramban dipaksa memicu *Refresh* server (yang merespon dengan larangan/lemparan kembali ke Halaman Login karena ketiadaan Sesi).
+  - **CSRF 419 Bypass:** Mencoba penembasan paksa form log-out ganda (mengunjungi `/logout` via kolom URL), sistem kini dengan mulus melumpuhkan sesi (validasi invalidate dan regenerateToken) dan menjatuhkan pengguna kembali secara *graceful* ke gerbang Landing Page.
+
+### [2026-04-17] Document Assignment Architecture & Task Matrix
+- **Description:** Implementasi sistem penugasan formal (Command Chain) yang memungkinkan Kepala Puskesmas mendelegasikan penyusunan atau revisi dokumen kepada peran spesifik (PJ Program/Staff).
+- **Changes:**
+  - **Task Schema Deployment:** Mengaktifkan tabel `document_tasks` untuk melacak siklus penugasan: *Menunggu Ketersediaan* -> *Dikerjakan* -> *Selesai*.
+  - **Head-to-Role Delegation:** Menambahkan fungsionalitas murni pada "Repository Utama" di mana Kepala Puskesmas dapat langsung "Menugaskan Revisi" pada dokumen aktif melalui modal otorisasi terpusat.
+  - **Task Management Controller:** Mengimplementasikan `DocumentTaskController` untuk menangani logika ambil tugas (*Accept Task*) dan penyelesaian tugas (*Complete Task*).
+  - **Unified Task Matrix UI:** Pembuatan modul "Penugasan" dengan estetika *Medical Teal* premium, mendukung filter status dan aksi kontekstual berdasarkan kepemilikan tugas.
+  - **RBAC Task Synchronization:** Sinkronisasi izin akses baru (`view-tasks`, `create-tasks`) ke dalam matriks peran sistem pada `CustomSeeder`.
+- **Testing:**
+  - **Delegation Flow:** Memastikan Kepala Puskesmas berhasil menginjeksi tugas baru ke dalam antrean target role.
+  - **Authorization Audit:** Memverifikasi bahwa hanya user dengan role yang sesuai yang dapat menekan tombol "Terima Tugas".
+  - **State Integrity:** Menjamin link "Kerjakan" pada tugas revisi mengarah tepat ke editor dokumen yang bersangkutan.

@@ -223,7 +223,11 @@ class DocumentController extends Controller
             $query->whereNotIn('status', ['Draft', 'Pengajuan Revisi']);
         })->with(['category', 'uploader', 'latestRevision'])->get();
         $categories = \App\Models\Category::orderBy('name')->get();
-        return view('admin.active_document.index', compact('documents', 'userRoles', 'categories'));
+        
+        // Pass roles for the assignment modal
+        $roles = \Itstructure\LaRbac\Models\Role::whereIn('slug', ['pj-program', 'staff', 'bagian-mutu'])->get();
+        
+        return view('admin.active_document.index', compact('documents', 'userRoles', 'categories', 'roles'));
     }
 
     public function create()

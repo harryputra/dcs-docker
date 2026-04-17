@@ -34,6 +34,8 @@ class CustomSeeder extends Seeder
             ['slug' => 'active-document', 'name' => 'Active Document', 'description' => 'Izin untuk mengakses dokumen aktif'],
             ['slug' => 'view-approval', 'name' => 'View Approval', 'description' => 'Izin untuk melihat approval dokumen'],
             ['slug' => 'edit-approval', 'name' => 'Edit Approval', 'description' => 'Izin untuk mengedit approval dokumen'],
+            ['slug' => 'view-tasks', 'name' => 'View Tasks', 'description' => 'Izin untuk melihat penugasan'],
+            ['slug' => 'create-tasks', 'name' => 'Create Tasks', 'description' => 'Izin untuk membuat penugasan'],
         ];
 
         foreach ($permissions as $permission) {
@@ -42,7 +44,7 @@ class CustomSeeder extends Seeder
 
         // Custom roles
         $roles = [
-            'Administrator' => [
+            'administrator' => [
                 'name' => 'Administrator',
                 'permissions' => [
                     Permission::ADMINISTRATE_PERMISSION,
@@ -59,39 +61,45 @@ class CustomSeeder extends Seeder
                     'active-document',
                     'view-approval',
                     'edit-approval',
+                    'view-tasks',
+                    'create-tasks',
                 ],
             ],
-            'Pengendali Dokumen' => [
+            'pengendali-dokumen' => [
                 'name' => 'Pengendali Dokumen',
                 'permissions' => [
                     'view-documents',
                     'active-document',
                     'view-approval',
                     'edit-approval',
-                    'view-histories'
+                    'view-histories',
+                    'view-tasks'
                 ],
             ],
-            'Bagian Mutu' => [
+            'bagian-mutu' => [
                 'name' => 'Bagian Mutu',
                 'permissions' => [
                     'view-documents',
                     'active-document',
                     'view-approval',
                     'edit-approval',
-                    'view-histories'
+                    'view-histories',
+                    'view-tasks'
                 ],
             ],
-            'Kepala Puskesmas' => [
+            'kepala-puskesmas' => [
                 'name' => 'Kepala Puskesmas',
                 'permissions' => [
                     'view-documents',
                     'active-document',
                     'view-approval',
                     'edit-approval',
-                    'view-histories'
+                    'view-histories',
+                    'view-tasks',
+                    'create-tasks',
                 ],
             ],
-            'PJ Program' => [
+            'pj-program' => [
                 'name' => 'PJ Program',
                 'permissions' => [
                     'view-documents',
@@ -101,14 +109,16 @@ class CustomSeeder extends Seeder
                     'edit-documents',
                     'create-revisions',
                     'edit-revisions',
-                    'view-histories'
+                    'view-histories',
+                    'view-tasks'
                 ],
             ],
-            'Staff' => [
+            'staff' => [
                 'name' => 'Staff',
                 'permissions' => [
                     'view-documents',
                     'active-document',
+                    'view-tasks'
                 ],
             ],
         ];

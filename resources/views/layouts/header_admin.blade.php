@@ -238,6 +238,16 @@
                             </li>
                         @endcan
 
+                        @if(true) {{-- DEBUG: Force show Penugasan --}}
+                            <li class="sidebar-item">
+                                @php $isTask = Str::contains(request()->url(), 'document-tasks'); @endphp
+                                <a class="sidebar-link rounded-3 {{ $isTask ? 'active' : '' }}" href="{{ route('document-tasks.index') }}">
+                                    <i class="ti ti-clipboard-list fs-5"></i>
+                                    <span class="hide-menu fw-semibold">Penugasan</span>
+                                </a>
+                            </li>
+                        @endif
+
                         @if(Auth::check() && Auth::user()->isRole('Administrator') && Auth::user()->is_dev_mode)
                             <li class="nav-small-cap mt-4">
                                 <span class="hide-menu fw-bolder text-uppercase text-danger letter-spacing-1">Developer Tools</span>
@@ -376,7 +386,7 @@
                                                         class="text-dark text-decoration-none d-block">
                                                         <div class="gap-2 d-flex align-items-start">
                                                             <div class="flex-shrink-0">
-                                                                <span
+                                                                 <span
                                                                     class="p-2 badge bg-light-primary text-primary rounded-circle">
                                                                     <i class="ti ti-bell fs-5"></i>
                                                                 </span>
@@ -430,3 +440,51 @@
                 </nav>
             </header>
             <!--  Header End -->
+            <div class="container-fluid">
+                @yield('content')
+            </div>
+        </div>
+    </div>
+    <script src="{{ asset('assets/libs/jquery/dist/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/sidebarmenu.js') }}"></script>
+    <script src="{{ asset('assets/js/app.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/simplebar/dist/simplebar.js') }}"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="{{ asset('assets/js/searchableOptionList.js') }}"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    @yield('scripts')
+
+    <script>
+        function handleLogout(event) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Apakah anda yakin?',
+                text: "Anda akan keluar dari sistem!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Keluar!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'my-custom-popup'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Submit CSRF logout
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
